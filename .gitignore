@@ -1,0 +1,10 @@
+# Claves y configuración privada (nunca se suben)
+.env
+.env.*
+# Dependencias y compilados
+node_modules/
+dist/
+.vercel/
+# Sistema
+.DS_Store
+Thumbs.db

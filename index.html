@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mi App de Estudio</title>
+  <style>
+    :root { --bg:#f6f4ef; --card:#ffffff; --ink:#1d1d1f; --muted:#6b6b70; --accent:#2f6f4f; }
+    @media (prefers-color-scheme: dark) {
+      :root { --bg:#16171a; --card:#212226; --ink:#f2f2f2; --muted:#a0a0a8; --accent:#6fbf8f; }
+    }
+    * { box-sizing: border-box; }
+    body { margin:0; font-family: system-ui, sans-serif; background:var(--bg); color:var(--ink); }
+    main { max-width: 720px; margin: 0 auto; padding: 48px 16px; }
+    h1 { font-size: 2rem; margin: 0 0 8px; }
+    p.sub { color: var(--muted); margin: 0 0 32px; }
+    .grid { display:grid; gap:16px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+    .card { background:var(--card); border-radius:14px; padding:20px; box-shadow:0 1px 3px rgba(0,0,0,.08); }
+    .card h2 { margin:0 0 6px; font-size:1.2rem; }
+    .card p { margin:0; color:var(--muted); }
+    .tag { display:inline-block; margin-top:12px; font-size:.8rem; color:var(--accent); font-weight:600; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Mi App de Estudio</h1>
+    <p class="sub">Un solo lugar para aprender idiomas y otras materias, con un tutor de IA.</p>
+    <div class="grid">
+      <div class="card">
+        <h2>🇬🇧 Inglés</h2>
+        <p>Episodios y Libro 1, con repaso y práctica.</p>
+        <span class="tag">Próximamente</span>
+      </div>
+      <div class="card">
+        <h2>💻 Programación</h2>
+        <p>Temas del técnico en programación de software.</p>
+        <span class="tag">Próximamente</span>
+      </div>
+    </div>
+  </main>
+</body>
+</html>
