@@ -29,6 +29,7 @@ create table if not exists temas (
 create table if not exists tarjetas (
   id bigint generated always as identity primary key,
   materia_id text not null references materias(id) on delete cascade,
+  unidad_id bigint references unidades(id) on delete cascade,
   tema text,
   frente text not null,
   reverso text not null,

@@ -180,15 +180,18 @@ function vistaInicio(user, perfil) {
 
 async function vistaIngles() {
   pintar(`<p class="muted">Cargando unidades…</p>`);
-  const [u, t, p] = await Promise.all([
+  const [u, t, p, tj] = await Promise.all([
     db.from("unidades").select("*").eq("materia_id", "ingles").order("numero"),
     db.from("temas").select("*").order("orden"),
-    contarPendientes()
+    contarPendientes(),
+    db.from("tarjetas").select("id, unidad_id").eq("materia_id", "ingles")
   ]);
   if (u.error || t.error) return pintar(errorBox(u.error || t.error));
 
   const porUnidad = {};
   for (const tema of t.data) (porUnidad[tema.unidad_id] ||= []).push(tema);
+  const tarjetasPorUnidad = {};
+  for (const c of tj.data || []) tarjetasPorUnidad[c.unidad_id] = (tarjetasPorUnidad[c.unidad_id] || 0) + 1;
 
   const unidadesHtml = u.data.map((un) => `
     <details class="unidad">
@@ -205,6 +208,9 @@ async function vistaIngles() {
             <div class="muted">${esc(tm.tema_es)}</div>
           </div>`).join("")}
         ${un.practica ? `<div class="practica">✍️ <b>Práctica:</b> ${esc(un.practica)}</div>` : ""}
+        ${tarjetasPorUnidad[un.id] ? `
+          <a class="btn alt" href="#/ingles/repaso/${un.id}" style="display:inline-block;text-decoration:none;margin-top:12px">
+            🃏 Repasar esta unidad (${tarjetasPorUnidad[un.id]} tarjetas)</a>` : ""}
       </div>
     </details>`).join("");
 
@@ -212,35 +218,67 @@ async function vistaIngles() {
     <a href="#/" class="link">← Inicio</a>
     <h1>🇬🇧 Inglés</h1>
     <div class="card" style="margin:16px 0">
-      <h2>Tarjetas de repaso</h2>
-      <p class="muted">${p} tarjeta(s) para repasar hoy.</p>
+      <h2>Repaso del día</h2>
+      <p class="muted">${p} tarjeta(s) para hoy: las que te tocan repasar + hasta ${NUEVAS_POR_DIA} nuevas.
+        Para practicar una unidad completa, ábrela abajo.</p>
       <a class="btn" href="#/ingles/repaso" style="display:inline-block;text-decoration:none;margin-top:8px">Repasar ahora</a>
     </div>
     <h2 style="margin-top:24px">Libro 1 · Unidades</h2>
     ${unidadesHtml}`);
 }
 
-// Tarjetas que tocan hoy: las nuevas (sin progreso) + las vencidas
-async function tarjetasDeHoy() {
-  const [tj, pr] = await Promise.all([
-    db.from("tarjetas").select("*").eq("materia_id", "ingles").order("id"),
-    db.from("progreso").select("*")
-  ]);
+// Máximo de tarjetas NUEVAS por día en el repaso general (para no abrumar)
+const NUEVAS_POR_DIA = 15;
+
+// Tarjetas que tocan hoy: las vencidas + las nuevas (sin progreso).
+// Con unidadId: todas las pendientes de esa unidad. Sin unidadId: vencidas + hasta 15 nuevas.
+async function tarjetasDeHoy(unidadId = null) {
+  let consulta = db.from("tarjetas").select("*").eq("materia_id", "ingles")
+    .order("unidad_id", { ascending: true }).order("id");
+  if (unidadId) consulta = consulta.eq("unidad_id", unidadId);
+  const [tj, pr] = await Promise.all([consulta, db.from("progreso").select("*")]);
   if (tj.error) throw tj.error;
   if (pr.error) throw pr.error;
   const prog = Object.fromEntries(pr.data.map((x) => [x.tarjeta_id, x]));
-  return tj.data
-    .map((c) => ({ ...c, prog: prog[c.id] }))
-    .filter((c) => !c.prog || c.prog.proxima_revision <= hoy());
+  const todas = tj.data.map((c) => ({ ...c, prog: prog[c.id] }));
+  const vencidas = todas.filter((c) => c.prog && c.prog.proxima_revision <= hoy());
+  let nuevas = todas.filter((c) => !c.prog);
+  if (!unidadId) nuevas = nuevas.slice(0, NUEVAS_POR_DIA);
+  return [...vencidas, ...nuevas];
 }
+
+// 🔊 Pronunciación con la voz del navegador (gratis, sin internet extra)
+function hablar(texto) {
+  if (!("speechSynthesis" in window)) return alert("Tu navegador no tiene voz disponible.");
+  const limpio = String(texto).replace(/[→/]/g, ", ").replace(/[—…]/g, " ").replace(/\s+/g, " ").trim();
+  speechSynthesis.cancel();
+  const voz = new SpeechSynthesisUtterance(limpio);
+  voz.lang = "en-US";
+  voz.rate = 0.9;
+  const ingles = speechSynthesis.getVoices().find((v) => v.lang?.startsWith("en"));
+  if (ingles) voz.voice = ingles;
+  speechSynthesis.speak(voz);
+}
+const btnVoz = (texto) =>
+  `<button class="voz" title="Escuchar" data-voz="${esc(texto)}">🔊</button>`;
+app.addEventListener("click", (e) => {
+  const b = e.target.closest("[data-voz]");
+  if (b) hablar(b.dataset.voz);
+});
 async function contarPendientes() {
   try { return (await tarjetasDeHoy()).length; } catch { return "?"; }
 }
 
-async function vistaRepaso() {
+async function vistaRepaso(unidadId = null) {
   pintar(`<p class="muted">Preparando tarjetas…</p>`);
   let cola;
-  try { cola = await tarjetasDeHoy(); } catch (e) { return pintar(errorBox(e)); }
+  try { cola = await tarjetasDeHoy(unidadId); } catch (e) { return pintar(errorBox(e)); }
+  if (!cola.length) return pintar(`
+    <a href="#/ingles" class="link">← Inglés</a>
+    <div class="card flash" style="margin-top:16px">
+      <div class="big">✅ Al día</div>
+      <p class="muted">No tienes tarjetas pendientes ${unidadId ? "en esta unidad" : "hoy"}. ¡Vuelve mañana!</p>
+    </div>`);
   let i = 0, bien = 0, mal = 0;
 
   const mostrar = (volteada = false) => {
@@ -259,10 +297,10 @@ async function vistaRepaso() {
       <div class="stats muted"><span>Tarjeta ${i + 1} de ${cola.length}</span><span>✅ ${bien}</span><span>🔁 ${mal}</span></div>
       <div class="card flash">
         <div class="sec">${esc(c.tema)}</div>
-        <div class="big">${esc(c.frente)}</div>
+        <div class="big">${esc(c.frente)} ${btnVoz(c.frente)}</div>
         ${volteada ? `
           <div style="font-size:1.2rem">${esc(c.reverso)}</div>
-          ${c.ejemplo ? `<div class="practica"><b>${esc(c.ejemplo)}</b><br><span class="muted">${esc(c.traduccion)}</span></div>` : ""}
+          ${c.ejemplo ? `<div class="practica"><b>${esc(c.ejemplo)}</b> ${btnVoz(c.ejemplo)}<br><span class="muted">${esc(c.traduccion)}</span></div>` : ""}
           <div class="row">
             <button class="btn bad" id="b-no">No lo sabía</button>
             <button class="btn" id="b-si">Lo sabía</button>
@@ -310,6 +348,8 @@ async function router() {
   if (ruta === "/admin" && perfil.rol === "admin") return vistaAdmin(perfil);
   if (ruta === "/ingles") return vistaIngles();
   if (ruta === "/ingles/repaso") return vistaRepaso();
+  const m = ruta.match(/^\/ingles\/repaso\/(\d+)$/);
+  if (m) return vistaRepaso(Number(m[1]));
   return vistaInicio(user, perfil);
 }
 
