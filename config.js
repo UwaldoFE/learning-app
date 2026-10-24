@@ -3,5 +3,5 @@
 // la ponen las reglas (RLS) de la base de datos. NUNCA pongas aquí la clave "secret".
 window.APP_CONFIG = {
   SUPABASE_URL: "https://idkwjntidyqdurosvyqp.supabase.co",
-  SUPABASE_KEY: "PEGAR_AQUI_LA_CLAVE_PUBLISHABLE"
+  SUPABASE_KEY: "sb_publishable_SNqxRaUtg80WT4NdQO0g4Q_DaPThv0i"
 };
