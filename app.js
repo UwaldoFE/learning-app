@@ -23,38 +23,147 @@ async function usuarioActual() {
   return data.session?.user ?? null;
 }
 
-function vistaLogin(msg = "") {
+async function miPerfil() {
+  const user = await usuarioActual();
+  if (!user) return null;
+  const { data } = await db.from("perfiles").select("*").eq("id", user.id).maybeSingle();
+  return data;
+}
+
+const URL_APP = location.origin + location.pathname;
+const traducirError = (m = "") =>
+  /Invalid login credentials/i.test(m) ? "Correo o contraseña incorrectos."
+  : /Email not confirmed/i.test(m) ? "Primero confirma tu correo: revisa tu bandeja (y spam)."
+  : /already registered/i.test(m) ? "Ese correo ya tiene cuenta. Usa “Entrar”."
+  : /at least 6/i.test(m) ? "La contraseña debe tener al menos 6 caracteres."
+  : m;
+
+// modo: "entrar" | "crear" | "olvide"
+function vistaLogin(msg = "", modo = "entrar") {
   btnSalir.hidden = true;
+  const titulos = { entrar: "Entrar", crear: "Crear cuenta", olvide: "Recuperar contraseña" };
   pintar(`
     <div class="box card">
-      <h1>Entrar</h1>
-      <p class="muted">Escribe tu correo y te llega un enlace para entrar. Sin contraseñas.</p>
+      <h1>${titulos[modo]}</h1>
       <form id="f-login">
+        ${modo === "crear" ? `<input type="text" id="nombre" required placeholder="Tu nombre" autocomplete="name">` : ""}
         <input type="email" id="email" required placeholder="tu@correo.com" autocomplete="email">
-        <button class="btn" id="btn-enviar">Enviarme el enlace</button>
+        ${modo !== "olvide" ? `<input type="password" id="clave" required minlength="6" placeholder="Contraseña"
+            autocomplete="${modo === "crear" ? "new-password" : "current-password"}">` : ""}
+        <button class="btn" id="btn-enviar">${modo === "olvide" ? "Enviarme el enlace" : titulos[modo]}</button>
       </form>
       <p id="login-msg" class="muted">${esc(msg)}</p>
+      <div class="row" style="justify-content:flex-start">
+        ${modo !== "entrar" ? `<button class="link" data-modo="entrar">Ya tengo cuenta</button>` : ""}
+        ${modo !== "crear" ? `<button class="link" data-modo="crear">Crear cuenta</button>` : ""}
+        ${modo !== "olvide" ? `<button class="link" data-modo="olvide">Olvidé mi contraseña</button>` : ""}
+      </div>
     </div>`);
+  app.querySelectorAll("[data-modo]").forEach((b) => (b.onclick = () => vistaLogin("", b.dataset.modo)));
+
   document.getElementById("f-login").onsubmit = async (ev) => {
     ev.preventDefault();
     const email = document.getElementById("email").value.trim();
+    const clave = document.getElementById("clave")?.value;
     const btn = document.getElementById("btn-enviar");
     const out = document.getElementById("login-msg");
-    btn.disabled = true; out.textContent = "Enviando…";
-    const { error } = await db.auth.signInWithOtp({
-      email, options: { emailRedirectTo: location.origin + location.pathname }
-    });
+    btn.disabled = true; out.textContent = "Un momento…";
+    let error;
+    if (modo === "entrar") {
+      ({ error } = await db.auth.signInWithPassword({ email, password: clave }));
+      if (!error) return router();
+    } else if (modo === "crear") {
+      const nombre = document.getElementById("nombre").value.trim();
+      ({ error } = await db.auth.signUp({
+        email, password: clave, options: { data: { nombre }, emailRedirectTo: URL_APP }
+      }));
+      if (!error) out.textContent = "¡Cuenta creada! Revisa tu correo para confirmarla. Luego el administrador debe aprobarte.";
+    } else {
+      ({ error } = await db.auth.resetPasswordForEmail(email, { redirectTo: URL_APP }));
+      if (!error) out.textContent = "Te enviamos un enlace para crear una contraseña nueva. Revisa tu correo (y spam).";
+    }
     btn.disabled = false;
-    out.textContent = error ? "Error: " + error.message
-      : "¡Listo! Revisa tu correo (y la carpeta de spam) y toca el enlace.";
+    if (error) out.textContent = traducirError(error.message);
   };
 }
 
-// ---------- vistas ----------
-function vistaInicio(user) {
+// Pantalla para poner / cambiar contraseña (también llega aquí desde "Olvidé mi contraseña")
+function vistaClave(msg = "") {
   pintar(`
-    <h1>Hola 👋</h1>
-    <p class="muted">${esc(user.email)}</p>
+    <a href="#/" class="link">← Inicio</a>
+    <div class="box card">
+      <h1>Mi contraseña</h1>
+      <p class="muted">${esc(msg || "Escribe tu nueva contraseña (mínimo 6 caracteres).")}</p>
+      <form id="f-clave">
+        <input type="password" id="c1" required minlength="6" placeholder="Nueva contraseña" autocomplete="new-password">
+        <input type="password" id="c2" required minlength="6" placeholder="Repítela" autocomplete="new-password">
+        <button class="btn" id="b-clave">Guardar contraseña</button>
+      </form>
+      <p id="clave-msg" class="muted"></p>
+    </div>`);
+  document.getElementById("f-clave").onsubmit = async (ev) => {
+    ev.preventDefault();
+    const c1 = document.getElementById("c1").value, c2 = document.getElementById("c2").value;
+    const out = document.getElementById("clave-msg");
+    if (c1 !== c2) return (out.textContent = "Las dos contraseñas no coinciden.");
+    const { error } = await db.auth.updateUser({ password: c1 });
+    out.textContent = error ? traducirError(error.message) : "✅ Contraseña guardada. Ya puedes entrar con tu correo y esta contraseña.";
+  };
+}
+
+function vistaPendiente(user) {
+  pintar(`
+    <div class="box card">
+      <h1>Cuenta pendiente ⏳</h1>
+      <p>Hola${user?.user_metadata?.nombre ? " " + esc(user.user_metadata.nombre) : ""}, tu cuenta (<b>${esc(user?.email)}</b>) ya está creada.</p>
+      <p class="muted">El administrador debe darte acceso. Cuando lo haga, recarga esta página.</p>
+      <div class="row"><button class="btn alt" onclick="location.reload()">Recargar</button></div>
+    </div>`);
+}
+
+async function vistaAdmin(yo) {
+  pintar(`<p class="muted">Cargando usuarios…</p>`);
+  const { data, error } = await db.from("perfiles").select("*").order("creado");
+  if (error) return pintar(errorBox(error));
+  const pendientes = data.filter((p) => !p.activo).length;
+  pintar(`
+    <a href="#/" class="link">← Inicio</a>
+    <h1>👑 Administrar accesos</h1>
+    <p class="muted">${data.length} usuario(s) · ${pendientes} pendiente(s) de aprobar</p>
+    ${data.map((p) => `
+      <div class="card" style="margin:10px 0">
+        <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center">
+          <div>
+            <b>${esc(p.nombre || "(sin nombre)")}</b>
+            <span class="pill">${p.rol === "admin" ? "Administrador" : "Estudiante"}</span>
+            <span class="pill" style="color:${p.activo ? "var(--accent)" : "var(--bad)"}">${p.activo ? "Con acceso" : "Pendiente"}</span>
+            <div class="muted">${esc(p.email)}</div>
+          </div>
+          ${p.id === yo.id ? `<span class="muted">(tú)</span>` : `
+          <div class="row" style="margin:0">
+            <button class="btn ${p.activo ? "bad" : ""}" data-acc="activo" data-id="${p.id}" data-val="${!p.activo}">
+              ${p.activo ? "Quitar acceso" : "Dar acceso"}</button>
+            <button class="btn alt" data-acc="rol" data-id="${p.id}" data-val="${p.rol === "admin" ? "estudiante" : "admin"}">
+              ${p.rol === "admin" ? "Quitar admin" : "Hacer admin"}</button>
+          </div>`}
+        </div>
+      </div>`).join("")}`);
+  app.querySelectorAll("[data-acc]").forEach((b) => (b.onclick = async () => {
+    const cambio = b.dataset.acc === "activo" ? { activo: b.dataset.val === "true" } : { rol: b.dataset.val };
+    b.disabled = true;
+    const { error } = await db.from("perfiles").update(cambio).eq("id", b.dataset.id);
+    if (error) return alert("No se pudo guardar: " + error.message);
+    vistaAdmin(yo);
+  }));
+}
+
+// ---------- vistas ----------
+function vistaInicio(user, perfil) {
+  pintar(`
+    <h1>Hola${perfil.nombre ? " " + esc(perfil.nombre) : ""} 👋</h1>
+    <p class="muted">${esc(user.email)} ·
+      <a href="#/clave">Mi contraseña</a>
+      ${perfil.rol === "admin" ? ` · <a href="#/admin">👑 Administrar accesos</a>` : ""}</p>
     <div class="grid">
       <a class="card" href="#/ingles">
         <h2>🇬🇧 Inglés</h2>
@@ -187,17 +296,27 @@ async function vistaRepaso() {
 }
 
 // ---------- enrutador (cambia de pantalla según el # de la dirección) ----------
+let modoRecuperacion = false;
+
 async function router() {
   const user = await usuarioActual();
   if (!user) return vistaLogin();
   btnSalir.hidden = false;
+  if (modoRecuperacion) return vistaClave("Llegaste desde el enlace de recuperación. Crea tu nueva contraseña.");
   const ruta = location.hash.replace(/^#/, "") || "/";
+  if (ruta === "/clave") return vistaClave();
+  const perfil = await miPerfil();
+  if (!perfil || !perfil.activo) return vistaPendiente(user);
+  if (ruta === "/admin" && perfil.rol === "admin") return vistaAdmin(perfil);
   if (ruta === "/ingles") return vistaIngles();
   if (ruta === "/ingles/repaso") return vistaRepaso();
-  return vistaInicio(user);
+  return vistaInicio(user, perfil);
 }
 
 btnSalir.onclick = async () => { await db.auth.signOut(); location.hash = "/"; vistaLogin("Sesión cerrada."); };
-window.addEventListener("hashchange", router);
-db.auth.onAuthStateChange((evento) => { if (evento === "SIGNED_IN") router(); });
+window.addEventListener("hashchange", () => { modoRecuperacion = false; router(); });
+db.auth.onAuthStateChange((evento) => {
+  if (evento === "PASSWORD_RECOVERY") { modoRecuperacion = true; router(); }
+  else if (evento === "SIGNED_IN") router();
+});
 router();
