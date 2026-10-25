@@ -394,12 +394,14 @@ async function router() {
   const perfil = await miPerfil();
   if (!perfil || !perfil.activo) return vistaPendiente(user);
   if (ruta === "/admin" && perfil.rol === "admin") return vistaAdmin(perfil);
-  if (ruta === "/ingles") return vistaIngles();
+  if (ruta === "/ingles") { await cargarHechas(); return vistaIngles(); }
   if (ruta === "/ingles/repaso") return vistaRepaso();
   const m = ruta.match(/^\/ingles\/repaso\/(\d+)$/);
   if (m) return vistaRepaso(Number(m[1]));
   if (ruta === "/ingles/errores") return vistaLeccion("errores");
   if (ruta === "/ingles/lecturas") return vistaLecturas();
+  if (ruta === "/ingles/tutor") return vistaTutor();
+  if (ruta === "/ingles/mi-vida") return vistaMiVida();
   const mr = ruta.match(/^\/ingles\/lectura\/([\w-]+)$/);
   if (mr) return vistaLectura(mr[1]);
   const ml = ruta.match(/^\/ingles\/leccion\/([\w-]+)$/);

@@ -143,6 +143,26 @@ const guardarHecha = (id, aciertos) => {
   } catch { /* sin almacenamiento: no pasa nada */ }
 };
 
+// Trae lo que ya hiciste desde tu cuenta (si la tabla existe) y lo junta con lo del dispositivo
+async function cargarHechas() {
+  try {
+    const { data, error } = await db.from("mis_lecturas").select("lectura_id, aciertos");
+    if (error) return;
+    const h = leerHechas();
+    data.forEach((r) => { h[r.lectura_id] = Math.max(h[r.lectura_id] || 0, r.aciertos); });
+    localStorage.setItem(claveLect, JSON.stringify(h));
+  } catch { /* sin conexión o sin tabla: se usa lo del dispositivo */ }
+}
+async function guardarHechaCuenta(id, aciertos) {
+  try {
+    const user = await usuarioActual();
+    const prev = await db.from("mis_lecturas").select("*").eq("lectura_id", id).maybeSingle();
+    if (prev.error) return;
+    await db.from("mis_lecturas").upsert({ user_id: user.id, lectura_id: id,
+      aciertos: Math.max(prev.data?.aciertos || 0, aciertos), veces: (prev.data?.veces || 0) + 1, ultima: new Date().toISOString() });
+  } catch { /* si falla, queda en el dispositivo */ }
+}
+
 async function sumarXP(xp) {
   const user = await usuarioActual();
   if (!user || !xp) return;
@@ -181,7 +201,8 @@ function htmlLecturasDe(episodio) {
       </a>`).join("")}</div>`;
 }
 
-function vistaLecturas() {
+async function vistaLecturas() {
+  await cargarHechas();
   const eps = [...new Set(LECTURAS.map((x) => x.episodio))].sort((a, b) => b - a);
   pintar(`
     <a href="#/ingles" class="link">← Inglés</a>
@@ -190,7 +211,8 @@ function vistaLecturas() {
     ${eps.map((ep) => `<h2 style="margin-top:20px">Episodio ${ep}</h2>${htmlLecturasDe(ep).replace(/<div class="sec"[^>]*>.*?<\/div>/, "")}`).join("")}`);
 }
 
-function vistaLectura(id) {
+async function vistaLectura(id) {
+  await cargarHechas();
   const L = LECTURAS.find((x) => x.id === id);
   if (!L) return pintar(`<a href="#/ingles/lecturas" class="link">← Leer y escuchar</a><p>No encontré esa historia.</p>`);
   const total = L.preguntas.length;
@@ -296,6 +318,7 @@ function vistaLectura(id) {
     const anterior = leerHechas()[L.id];
     const xp = anterior === undefined ? bien * XP_PREGUNTA : Math.max(0, bien - anterior) * XP_PREGUNTA;
     guardarHecha(L.id, bien);
+    guardarHechaCuenta(L.id, bien);
     try { await sumarXP(xp); } catch { /* si falla, igual mostramos el resultado */ }
     const idx = LECTURAS.indexOf(L), siguiente = LECTURAS[idx + 1];
     document.getElementById("l-final").innerHTML = `
