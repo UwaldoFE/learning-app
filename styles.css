@@ -98,3 +98,10 @@ a.card.leccion.actual { border: 2px solid var(--accent); }
 .resumen { display: flex; justify-content: center; gap: 28px; flex-wrap: wrap; margin: 12px 0; }
 code { background: var(--bg); padding: 1px 6px; border-radius: 6px; }
 .opcion.bien { border-color: var(--accent); background: var(--ok-bg); color: var(--ok-ink); }
+
+/* Audio por palabra y lento */
+.palabra { cursor: pointer; border-radius: 4px; transition: background .2s; }
+.palabra:hover { text-decoration: underline dotted; text-underline-offset: 4px; }
+.palabra.oida { background: var(--accent); color: var(--accent-ink); }
+.voz + .voz { margin-left: 4px; }
+.pista-palabra { font-size: .8rem; }

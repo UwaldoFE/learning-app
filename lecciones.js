@@ -19,7 +19,7 @@ const avisoSQL = `
   </div>`;
 
 // Voz segura: si el celular no tiene voz o falla, la lección sigue igual
-const decir = (t) => { try { hablar(t); } catch (e) { /* sin voz */ } };
+const decir = (t, rate) => { try { hablar(t, rate); } catch (e) { /* sin voz */ } };
 
 const mezclar = (arr) => {
   const a = [...arr];
@@ -192,11 +192,12 @@ async function vistaLeccion(leccionId) {
       escribir: "Escríbelo en inglés", emparejar: "Une cada pareja" };
     let cuerpo = "";
     if (t === "elegir") {
-      cuerpo = `<div class="lec-frase">${esc(d.frase)} ${d.pista ? `<span class="muted">${esc(d.pista)}</span>` : ""}</div>
+      cuerpo = `<div class="lec-frase">${d.frase.startsWith("¿") ? esc(d.frase) : fraseTocable(d.frase)} ${d.pista ? `<span class="muted">${esc(d.pista)}</span>` : ""}</div>
         ${d.es ? `<div class="muted">${esc(d.es)}</div>` : ""}
         <div class="opciones">${d.opciones.map((o, i) => `<button class="opcion" data-op="${i}">${esc(o)}</button>`).join("")}</div>`;
     } else if (t === "escuchar") {
-      cuerpo = `<button class="btn alt" id="b-oir">🔊 Escuchar otra vez</button>
+      cuerpo = `<div class="row" style="justify-content:flex-start"><button class="btn alt" id="b-oir">🔊 Escuchar otra vez</button>
+        <button class="btn alt" id="b-lento">🐢 Despacio</button></div>
         <div class="opciones">${d.opciones.map((o, i) => `<button class="opcion" data-op="${i}">${esc(o)}</button>`).join("")}</div>`;
     } else if (t === "ordenar") {
       const palabras = d.frase.split(" ");
@@ -244,6 +245,7 @@ async function vistaLeccion(leccionId) {
       }));
       if (t === "escuchar") {
         document.getElementById("b-oir").onclick = () => decir(d.audio);
+        document.getElementById("b-lento").onclick = () => decir(d.audio, VEL.lenta);
         setTimeout(() => decir(d.audio), 300);
       }
     } else if (t === "ordenar") {
@@ -251,6 +253,7 @@ async function vistaLeccion(leccionId) {
       app.querySelectorAll("[data-f]").forEach((b) => (b.onclick = () => {
         if (comprobado || b.classList.contains("usada")) return;
         b.classList.add("usada");
+        decir(b.textContent, VEL.palabra);
         const chip = document.createElement("button");
         chip.className = "ficha"; chip.textContent = b.textContent;
         estado.elegidas.push(b.textContent);
@@ -331,7 +334,8 @@ async function vistaLeccion(leccionId) {
       <div class="fb ${ok ? "fb-ok" : "fb-mal"}">
         <b>${ok ? (ortografia ? "¡Bien! Ojo con la ortografía." : "¡Correcto!") : "Casi. La respuesta es:"}</b>
         ${!ok || ortografia ? `<div class="fb-resp">${esc(correcta)}</div>` : ""}
-        ${ingles ? `<div>${btnVoz(ingles)} <span>${esc(ingles)}</span></div>` : ""}
+        ${ingles ? `<div class="fb-ingles">${btnVoz(ingles)} <span>${fraseTocable(ingles)}</span></div>
+        <div class="muted pista-palabra">👆 Toca una palabra para oírla sola</div>` : ""}
         ${d.es && t !== "escribir" && t !== "ordenar" ? `<div class="muted">🇪🇸 ${esc(d.es)}</div>` : ""}
         <div class="fb-ex">💡 ${esc(d.explicacion)}</div>
         ${!ok && cola.includes(actual) ? `<div class="muted">Este ejercicio volverá al final de la lección.</div>` : ""}

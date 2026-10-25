@@ -278,22 +278,39 @@ async function tarjetasDeHoy(unidadId = null) {
 }
 
 // 🔊 Pronunciación con la voz del navegador (gratis, sin internet extra)
-function hablar(texto) {
+// velocidad: 0.9 normal · 0.55 lenta (🐢) · 0.75 palabra suelta
+const VEL = { normal: 0.9, lenta: 0.55, palabra: 0.75 };
+function hablar(texto, rate = VEL.normal) {
   if (!("speechSynthesis" in window)) return alert("Tu navegador no tiene voz disponible.");
-  const limpio = String(texto).replace(/[→/]/g, ", ").replace(/[—…]/g, " ").replace(/\s+/g, " ").trim();
+  const limpio = String(texto).replace(/[→/]/g, ", ").replace(/[—…]/g, " ").replace(/_+/g, " ").replace(/\s+/g, " ").trim();
+  if (!limpio) return;
   speechSynthesis.cancel();
   const voz = new SpeechSynthesisUtterance(limpio);
   voz.lang = "en-US";
-  voz.rate = 0.9;
+  voz.rate = rate;
   const ingles = speechSynthesis.getVoices().find((v) => v.lang?.startsWith("en"));
   if (ingles) voz.voice = ingles;
   speechSynthesis.speak(voz);
 }
+// Botones 🔊 normal + 🐢 lento
 const btnVoz = (texto) =>
-  `<button class="voz" title="Escuchar" data-voz="${esc(texto)}">🔊</button>`;
+  `<button class="voz" title="Escuchar" data-voz="${esc(texto)}">🔊</button>` +
+  `<button class="voz" title="Escuchar despacio" data-voz-lento="${esc(texto)}">🐢</button>`;
+// Frase con cada palabra tocable: al tocarla se oye sola
+const fraseTocable = (texto) => String(texto).split(/(\s+)/).map((w) => {
+  const palabra = w.replace(/^[^A-Za-z0-9']+|[^A-Za-z0-9']+$/g, "");
+  return palabra && !/^_+$/.test(w) ? `<span class="palabra" data-palabra="${esc(palabra)}">${esc(w)}</span>` : esc(w);
+}).join("");
 app.addEventListener("click", (e) => {
   const b = e.target.closest("[data-voz]");
-  if (b) hablar(b.dataset.voz);
+  if (b) return hablar(b.dataset.voz);
+  const l = e.target.closest("[data-voz-lento]");
+  if (l) return hablar(l.dataset.vozLento, VEL.lenta);
+  const p = e.target.closest("[data-palabra]");
+  if (p) {
+    p.classList.add("oida"); setTimeout(() => p.classList.remove("oida"), 600);
+    hablar(p.dataset.palabra, VEL.palabra);
+  }
 });
 async function contarPendientes() {
   try { return (await tarjetasDeHoy()).length; } catch { return "?"; }
@@ -327,10 +344,10 @@ async function vistaRepaso(unidadId = null) {
       <div class="stats muted"><span>Tarjeta ${i + 1} de ${cola.length}</span><span>✅ ${bien}</span><span>🔁 ${mal}</span></div>
       <div class="card flash">
         <div class="sec">${esc(c.tema)}</div>
-        <div class="big">${esc(c.frente)} ${btnVoz(c.frente)}</div>
+        <div class="big">${fraseTocable(c.frente)} ${btnVoz(c.frente)}</div>
         ${volteada ? `
           <div style="font-size:1.2rem">${esc(c.reverso)}</div>
-          ${c.ejemplo ? `<div class="practica"><b>${esc(c.ejemplo)}</b> ${btnVoz(c.ejemplo)}<br><span class="muted">${esc(c.traduccion)}</span></div>` : ""}
+          ${c.ejemplo ? `<div class="practica"><b>${fraseTocable(c.ejemplo)}</b> ${btnVoz(c.ejemplo)}<br><span class="muted">${esc(c.traduccion)}</span></div>` : ""}
           <div class="row">
             <button class="btn bad" id="b-no">No lo sabía</button>
             <button class="btn" id="b-si">Lo sabía</button>
