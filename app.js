@@ -242,6 +242,7 @@ async function vistaIngles() {
       </summary>
       <div class="episodio-body">
         ${htmlLeccionesDe(ep, lec) || `<p class="muted">Lecciones de este episodio: próximamente.</p>`}
+        ${htmlLecturasDe(ep)}
         <div class="sec" style="margin-top:14px">Temas del libro</div>
         ${u.data.filter((un) => numEp(un) === ep).map(htmlUnidad).join("")}
       </div>
@@ -398,6 +399,9 @@ async function router() {
   const m = ruta.match(/^\/ingles\/repaso\/(\d+)$/);
   if (m) return vistaRepaso(Number(m[1]));
   if (ruta === "/ingles/errores") return vistaLeccion("errores");
+  if (ruta === "/ingles/lecturas") return vistaLecturas();
+  const mr = ruta.match(/^\/ingles\/lectura\/([\w-]+)$/);
+  if (mr) return vistaLectura(mr[1]);
   const ml = ruta.match(/^\/ingles\/leccion\/([\w-]+)$/);
   if (ml) return vistaLeccion(ml[1]);
   return vistaInicio(user, perfil);

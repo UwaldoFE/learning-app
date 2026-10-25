@@ -114,6 +114,7 @@ function htmlPanelHoy(d, tarjetasPendientes) {
         <p class="muted">¡Completaste todas las lecciones cargadas! 🎉</p>`}
       <div class="row" style="justify-content:flex-start">
         ${d.errores ? `<a class="btn alt" href="#/ingles/errores">🎯 Mis errores (${d.errores})</a>` : ""}
+        <a class="btn alt" href="#/ingles/lecturas">📖 Leer y escuchar</a>
         <a class="btn alt" href="#/ingles/repaso">🃏 Tarjetas (${tarjetasPendientes})</a>
       </div>
     </div>`;

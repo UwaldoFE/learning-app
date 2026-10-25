@@ -105,3 +105,13 @@ code { background: var(--bg); padding: 1px 6px; border-radius: 6px; }
 .palabra.oida { background: var(--accent); color: var(--accent-ink); }
 .voz + .voz { margin-left: 4px; }
 .pista-palabra { font-size: .8rem; }
+
+/* Leer y escuchar */
+.lect-paso { margin-top: 14px; }
+.lect-linea { padding: 10px 8px; border-bottom: 1px solid var(--line); border-radius: 8px; font-size: 1.1rem; transition: background .2s; }
+.lect-linea:last-child { border-bottom: 0; }
+.lect-linea.sonando { background: var(--ok-bg, rgba(47,111,79,.12)); }
+.lect-acc { margin-top: 4px; }
+.lect-es { margin-top: 4px; font-size: .95rem; }
+.quien { color: var(--accent); }
+.lect-preg { padding: 12px 0; border-bottom: 1px solid var(--line); }
