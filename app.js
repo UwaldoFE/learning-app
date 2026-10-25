@@ -167,7 +167,7 @@ function vistaInicio(user, perfil) {
     <div class="grid">
       <a class="card" href="#/ingles">
         <h2>🇬🇧 Inglés</h2>
-        <p class="muted">English My Way · Libro 1: unidades, temas y tarjetas de repaso.</p>
+        <p class="muted">Lecciones por episodio, mis errores, racha y tarjetas de repaso.</p>
         <span class="tag">Entrar →</span>
       </a>
       <div class="card">
@@ -180,11 +180,12 @@ function vistaInicio(user, perfil) {
 
 async function vistaIngles() {
   pintar(`<p class="muted">Cargando unidades…</p>`);
-  const [u, t, p, tj] = await Promise.all([
+  const [u, t, p, tj, lec] = await Promise.all([
     db.from("unidades").select("*").eq("materia_id", "ingles").order("numero"),
     db.from("temas").select("*").order("orden"),
     contarPendientes(),
-    db.from("tarjetas").select("id, unidad_id").eq("materia_id", "ingles")
+    db.from("tarjetas").select("id, unidad_id").eq("materia_id", "ingles"),
+    datosLecciones()
   ]);
   if (u.error || t.error) return pintar(errorBox(u.error || t.error));
 
@@ -193,7 +194,7 @@ async function vistaIngles() {
   const tarjetasPorUnidad = {};
   for (const c of tj.data || []) tarjetasPorUnidad[c.unidad_id] = (tarjetasPorUnidad[c.unidad_id] || 0) + 1;
 
-  const unidadesHtml = u.data.map((un) => `
+  const htmlUnidad = (un) => `
     <details class="unidad">
       <summary>Unidad ${un.numero}
         ${un.episodio ? `<span class="pill">${esc(un.episodio)}</span>` : ""}
@@ -212,19 +213,48 @@ async function vistaIngles() {
           <a class="btn alt" href="#/ingles/repaso/${un.id}" style="display:inline-block;text-decoration:none;margin-top:12px">
             🃏 Repasar esta unidad (${tarjetasPorUnidad[un.id]} tarjetas)</a>` : ""}
       </div>
+    </details>`;
+
+  // Si todavía no se corrió db/002_lecciones.sql, la app sigue funcionando como antes
+  if (lec.error) {
+    return pintar(`
+      <a href="#/" class="link">← Inicio</a>
+      <h1>🇬🇧 Inglés</h1>
+      ${faltaSQL(lec.error) ? avisoSQL : errorBox(lec.error)}
+      <div class="card" style="margin:16px 0">
+        <h2>Repaso del día</h2>
+        <p class="muted">${p} tarjeta(s) para hoy.</p>
+        <a class="btn" href="#/ingles/repaso">Repasar ahora</a>
+      </div>
+      <h2 style="margin-top:24px">Libro 1 · Unidades</h2>
+      ${u.data.map(htmlUnidad).join("")}`);
+  }
+
+  // Agrupar las unidades por episodio (así evalúa el instituto)
+  const numEp = (un) => Number(String(un.episodio || "").replace(/\D/g, "")) || 0;
+  const episodios = [...new Set(u.data.map(numEp))].filter(Boolean).sort((a, b) => a - b);
+  const epActual = lec.siguiente?.episodio ?? episodios[0];
+  const episodiosHtml = episodios.map((ep) => `
+    <details class="episodio" ${ep === epActual ? "open" : ""}>
+      <summary>Episodio ${ep}
+        ${ep === epActual ? `<span class="pill ok">Estás aquí</span>` : ""}
+        <span class="muted" style="font-weight:400">· Unidades ${u.data.filter((un) => numEp(un) === ep).map((un) => un.numero).join(", ")}</span>
+      </summary>
+      <div class="episodio-body">
+        ${htmlLeccionesDe(ep, lec) || `<p class="muted">Lecciones de este episodio: próximamente.</p>`}
+        <div class="sec" style="margin-top:14px">Temas del libro</div>
+        ${u.data.filter((un) => numEp(un) === ep).map(htmlUnidad).join("")}
+      </div>
     </details>`).join("");
+  const sinEpisodio = u.data.filter((un) => !numEp(un));
 
   pintar(`
     <a href="#/" class="link">← Inicio</a>
     <h1>🇬🇧 Inglés</h1>
-    <div class="card" style="margin:16px 0">
-      <h2>Repaso del día</h2>
-      <p class="muted">${p} tarjeta(s) para hoy: las que te tocan repasar + hasta ${NUEVAS_POR_DIA} nuevas.
-        Para practicar una unidad completa, ábrela abajo.</p>
-      <a class="btn" href="#/ingles/repaso" style="display:inline-block;text-decoration:none;margin-top:8px">Repasar ahora</a>
-    </div>
-    <h2 style="margin-top:24px">Libro 1 · Unidades</h2>
-    ${unidadesHtml}`);
+    ${htmlPanelHoy(lec, p)}
+    <h2 style="margin-top:24px">Episodios</h2>
+    ${episodiosHtml}
+    ${sinEpisodio.map(htmlUnidad).join("")}`);
 }
 
 // Máximo de tarjetas NUEVAS por día en el repaso general (para no abrumar)
@@ -350,6 +380,9 @@ async function router() {
   if (ruta === "/ingles/repaso") return vistaRepaso();
   const m = ruta.match(/^\/ingles\/repaso\/(\d+)$/);
   if (m) return vistaRepaso(Number(m[1]));
+  if (ruta === "/ingles/errores") return vistaLeccion("errores");
+  const ml = ruta.match(/^\/ingles\/leccion\/([\w-]+)$/);
+  if (ml) return vistaLeccion(ml[1]);
   return vistaInicio(user, perfil);
 }
 
