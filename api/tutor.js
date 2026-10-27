@@ -9,7 +9,7 @@ const SUPA_URL = "https://idkwjntidyqdurosvyqp.supabase.co";
 const SUPA_KEY = "sb_publishable_SNqxRaUtg80WT4NdQO0g4Q_DaPThv0i";
 
 const LIMITE_DIARIO = 60;          // mensajes al tutor por día
-const MAX_HISTORIAL = 12;          // últimos mensajes que se envían a la IA
+const MAX_HISTORIAL = 16;          // últimos mensajes que se envían a la IA
 // Si un modelo deja de existir, se prueba el siguiente.
 const MODELOS = [process.env.OPENAI_MODEL, "gpt-4.1-mini", "gpt-4o-mini", "gpt-5-mini"].filter(Boolean);
 
@@ -27,6 +27,7 @@ const MODOS = {
   clase: "MODE: CLASS. Teach the topic the student asks for, in Spanish, short and clear, with 2–3 examples from the student's life (use 'Mi vida'). Put the explanation in \"nota\". Then ask ONE short practice question in English in \"mensaje\". On later turns, correct his answers and keep practicing that topic (max 3 questions), then say well done and suggest a next topic.",
   rol: "MODE: ROLE-PLAY. You play a character in the scenario the student chose (stay in character in \"mensaje\"). Speak naturally but very simply. Correct his English outside the character using the correction fields. After about 6 turns, end the scene politely and put a short summary of what he did well and what to practice in \"nota\" (Spanish).",
   libre: "MODE: FREE CONVERSATION. Start with a friendly 'question of the day' about his daily life (work, family, studies, plans). Keep the conversation going with one simple question each turn.",
+  flotante: "MODE: STUDY HELPER (floating chat). The student opens you from any screen of his study app; the CURRENT SCREEN is described below. (a) If he asks something in Spanish (about the exercise, a word, a grammar point), answer in Spanish in \"nota\": clear and short, with 1–2 English examples; this is NOT a mistake, so leave \"correccion\" empty and set \"bien\" true. If the exercise is not answered yet, give a hint that guides him to the answer instead of the answer itself; give the answer only if he asks for it directly or already answered. You may explain any topic that appears on his screen, even from another episode. (b) If he writes in English, correct it and keep a friendly simple conversation, like free conversation. \"mensaje\" can be a short follow-up in English (it may be a question to keep him practicing).",
   traducir: "MODE: HOW DO I SAY THIS? The student writes in Spanish (often a message he wants to send). Put the natural English version in \"mensaje\" and the original idea in \"mensaje_es\". In \"explicacion\" explain in Spanish the 1–2 most useful points (word order, a key word). Leave \"correccion\" empty unless he also tried in English. Ask nothing back."
 };
 
@@ -45,7 +46,7 @@ async function supa(ruta, token, opciones = {}) {
 
 const faltaTabla = (r) => !r.ok && /tutor_uso|mi_vida|does not exist|schema cache|PGRST205|42P01/i.test(JSON.stringify(r.data));
 
-function instrucciones({ modo, episodio, escenario, miVida, errores }) {
+function instrucciones({ modo, episodio, escenario, miVida, errores, contexto }) {
   const ep = Math.min(Math.max(Number(episodio) || 3, 1), 7);
   const permitidos = Object.entries(TEMAS).filter(([n]) => Number(n) <= ep).map(([n, t]) => `Ep${n}: ${t}`).join("\n");
   return `You are a warm, patient English tutor for a Spanish-speaking adult from Colombia (beginner, about A1). He studies English by "episodes".
@@ -54,6 +55,7 @@ ${permitidos}
 
 ${MODOS[modo] || MODOS.libre}
 ${escenario ? `Scenario chosen: ${escenario}` : ""}
+${contexto ? `CURRENT SCREEN (what the student sees right now):\n${contexto}` : ""}
 
 About the student ("Mi vida", written by him; use it for examples and questions):
 ${miVida || "(empty — ask him simple questions about his life)"}
@@ -63,9 +65,9 @@ ${errores.length ? errores.map((e) => "- " + e).join("\n") : "- (none recorded y
 
 CORRECTION RULES:
 - If his last message in English has mistakes, put the corrected sentence in "correccion", its Spanish translation in "correccion_es", and in "explicacion" ONE short reason in Spanish (max 2 sentences). Set "bien" to false.
-- If it is correct, leave "correccion" empty and set "bien" to true. If he wrote in Spanish (not in translate mode), gently give him the English version as the correction.
+- If it is correct, leave "correccion" empty and set "bien" to true. If he wrote in Spanish (not in translate or helper mode), gently give him the English version as the correction.
 - Never correct more than the 2 most important mistakes.
-- Always end "mensaje" with ONE simple question so he keeps talking (except in translate mode).
+- Always end "mensaje" with ONE simple question so he keeps talking (except in translate mode; in helper mode only when it helps).
 
 Reply ONLY with a JSON object with exactly these keys:
 {"bien": true|false, "correccion": "", "correccion_es": "", "explicacion": "", "nota": "", "mensaje": "", "mensaje_es": ""}
@@ -112,6 +114,7 @@ module.exports = async (req, res) => {
 
   // 3) Contexto: tu ficha "Mi vida" y tus errores pendientes
   const { modo = "libre", episodio = 3, escenario = "" } = req.body || {};
+  const contexto = String(req.body?.contexto || "").slice(0, 1200);
   const [vida, err] = await Promise.all([
     supa(`/rest/v1/mi_vida?select=texto`, token),
     supa(`/rest/v1/mis_errores?resuelto=eq.false&select=ejercicios(datos)&order=fallos.desc&limit=8`, token)
@@ -128,7 +131,7 @@ module.exports = async (req, res) => {
   if (!historial.length) historial.push({ role: "user", content: "(Start the session now.)" });
 
   try {
-    const r = await llamarOpenAI([{ role: "system", content: instrucciones({ modo, episodio, escenario, miVida, errores }) }, ...historial]);
+    const r = await llamarOpenAI([{ role: "system", content: instrucciones({ modo, episodio, escenario, miVida, errores, contexto }) }, ...historial]);
     const limpio = {};
     for (const k of ["correccion", "correccion_es", "explicacion", "nota", "mensaje", "mensaje_es"]) limpio[k] = String(r[k] ?? "").trim();
     limpio.bien = r.bien !== false && !limpio.correccion;

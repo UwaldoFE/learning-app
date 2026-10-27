@@ -28,6 +28,26 @@ const LECTURAS = [
     ]
   },
   {
+    id: "ep1-two-brothers", episodio: 1, titulo: "Two Brothers", es: "Dos hermanos",
+    tema: "profesiones, describir personas, comparativos y superlativos",
+    lineas: [
+      { en: "This is Mark. He is a lawyer.", es: "Este es Mark. Es abogado." },
+      { en: "His brother is Sam. Sam is a taxi driver.", es: "Su hermano es Sam. Sam es taxista." },
+      { en: "Mark is tall and thin. He has short black hair.", es: "Mark es alto y delgado. Tiene el pelo corto y negro." },
+      { en: "Sam is shorter than Mark, but he is stronger.", es: "Sam es más bajo que Mark, pero es más fuerte." },
+      { en: "Sam has big brown eyes and a big smile.", es: "Sam tiene ojos grandes y cafés y una gran sonrisa." },
+      { en: "Mark is older than Sam. Mark is forty, and Sam is thirty-five.", es: "Mark es mayor que Sam. Mark tiene cuarenta y Sam treinta y cinco." },
+      { en: "Today it is cold and cloudy.", es: "Hoy está frío y nublado." },
+      { en: "Sam is the happiest man in the city!", es: "¡Sam es el hombre más feliz de la ciudad!" }
+    ],
+    preguntas: [
+      { q: "What is Mark's job?", es: "¿Cuál es el trabajo de Mark?", opciones: ["He is a lawyer.", "He is a taxi driver.", "He is a nurse."], correcta: 0, ex: "\"He is a lawyer\" = Es abogado. La profesión lleva a/an." },
+      { q: "Who is taller?", es: "¿Quién es más alto?", opciones: ["Mark", "Sam"], correcta: 0, ex: "\"Sam is shorter than Mark\" = Sam es más bajo que Mark, así que Mark es más alto." },
+      { q: "What color are Sam's eyes?", es: "¿De qué color son los ojos de Sam?", opciones: ["Brown", "Black", "Blue"], correcta: 0, ex: "\"big brown eyes\" = ojos grandes y cafés. El adjetivo va antes de eyes." },
+      { q: "Who is older?", es: "¿Quién es mayor?", opciones: ["Sam", "Mark"], correcta: 1, ex: "\"Mark is older than Sam\": old → older than." }
+    ]
+  },
+  {
     id: "ep2-toms-day", episodio: 2, titulo: "Tom's Day", es: "El día de Tom",
     tema: "presente simple (-s con he/she), do/does, la hora",
     lineas: [
@@ -216,6 +236,7 @@ async function vistaLectura(id) {
   const L = LECTURAS.find((x) => x.id === id);
   if (!L) return pintar(`<a href="#/ingles/lecturas" class="link">← Leer y escuchar</a><p>No encontré esa historia.</p>`);
   const total = L.preguntas.length;
+  ponerContexto(`Lectura «${L.titulo}» (Episodio ${L.episodio})`, `Tema: ${L.tema}\nTexto:\n${L.lineas.map((x) => `${x.en} = ${x.es}`).join("\n")}\nPreguntas:\n${L.preguntas.map((x) => `${x.q} → ${x.opciones[x.correcta]}`).join("\n")}`);
 
   pintar(`
     <a href="#/ingles/lecturas" class="link">← Leer y escuchar</a>

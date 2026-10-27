@@ -5,6 +5,7 @@
 const META_XP = 50;          // meta diaria de XP
 const XP_PRIMERA = 10;       // XP por acertar al primer intento
 const XP_SEGUNDA = 5;        // XP por acertar un ejercicio que se repitió
+const EPISODIO_EVALUACION = 3; // próxima evaluación en el instituto: cámbialo cuando apruebes
 
 // Fecha local de Colombia (no UTC), para que la racha cuente bien de noche
 const fechaLocal = (d = new Date()) =>
@@ -93,7 +94,10 @@ async function datosLecciones() {
   const error = l.error || mis.error || err.error || est.error;
   if (error) return { error };
   const mias = Object.fromEntries(mis.data.map((m) => [m.leccion_id, m]));
-  const siguiente = l.data.find((x) => !mias[x.id] || mias[x.id].mejor_precision < 80) || null;
+  // Primero lo del episodio que viene en el instituto; después, el resto en orden
+  const pendiente = (x) => !mias[x.id] || mias[x.id].mejor_precision < 80;
+  const siguiente = l.data.find((x) => x.episodio === EPISODIO_EVALUACION && pendiente(x))
+    || l.data.find(pendiente) || null;
   return { lecciones: l.data, mias, errores: err.data.length, ...est, siguiente };
 }
 
@@ -135,6 +139,17 @@ function htmlLeccionesDe(episodio, d) {
         <div class="muted">${esc(x.descripcion || "")}</div>
       </a>`;
   }).join("")}</div>`;
+}
+
+// 🎉 Confeti cuando la lección queda dominada
+function confeti() {
+  const c = document.createElement("div");
+  c.className = "confeti";
+  const colores = ["#6c4cf5", "#ff5fa2", "#ffc93c", "#22c55e", "#ff9a1f", "#38bdf8"];
+  c.innerHTML = Array.from({ length: 60 }, () => `<i style="left:${Math.random() * 100}%;background:${colores[Math.floor(Math.random() * colores.length)]};
+    animation-delay:${Math.random() * 0.6}s;animation-duration:${1.8 + Math.random() * 1.4}s"></i>`).join("");
+  document.body.appendChild(c);
+  setTimeout(() => c.remove(), 3500);
 }
 
 // ---------- reproductor de la lección ----------
@@ -190,6 +205,7 @@ async function vistaLeccion(leccionId) {
 
   function pintarEjercicio() {
     const d = actual.datos, t = actual.tipo;
+    ponerContexto(`Lección «${titulo}» · ejercicio ${hechos + 1} de ${total}`, describirEjercicio(actual));
     const etiquetas = { elegir: "Elige la correcta", escuchar: "Escucha y elige", ordenar: "Ordena la frase",
       escribir: "Escríbelo en inglés", emparejar: "Une cada pareja" };
     let cuerpo = "";
@@ -322,6 +338,11 @@ async function vistaLeccion(leccionId) {
       correcta = d.pares.map((p) => `${p[0]} = ${p[1]}`).join(" · ");
     }
     comprobado = true;
+    const tuya = t === "elegir" || t === "escuchar" ? d.opciones[estado.sel]
+      : t === "ordenar" ? estado.elegidas.join(" ")
+      : t === "escribir" ? document.getElementById("resp").value
+      : `${estado.fallos} error(es) al unir`;
+    ponerContexto(TF.contexto.pantalla, describirEjercicio(actual, { ok, tuya }));
     const primera = !(actual.id in primerIntento);
     if (primera) primerIntento[actual.id] = ok;
     if (ok) {
@@ -347,6 +368,7 @@ async function vistaLeccion(leccionId) {
   }
 
   async function final() {
+    ponerContexto(`Fin de la lección «${titulo}»`);
     const ids = Object.keys(primerIntento);
     const bien = ids.filter((id) => primerIntento[id]).length;
     const precision = Math.round((bien / total) * 100);
@@ -358,6 +380,7 @@ async function vistaLeccion(leccionId) {
     let est = { xpHoy: xp, racha: 1 };
     try { est = await resumenEstudio(); } catch {}
     const metaOk = est.xpHoy >= META_XP;
+    if (precision >= 80) confeti();
     pintar(`
       <div class="card flash" style="margin-top:16px">
         <div class="big">${precision >= 80 ? "🎉 ¡Lección completada!" : "💪 Lección terminada"}</div>

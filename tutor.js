@@ -13,7 +13,7 @@ const MODOS_TUTOR = {
 };
 
 const TEMAS_CLASE = {
-  1: ["to be (am/is/are)", "a / an", "his / her", "comparativos (bigger, taller)"],
+  1: ["to be (am/is/are)", "a / an", "his / her", "profesiones y clima", "adjetivos y partes del cuerpo", "comparativos y superlativos"],
   2: ["la -s con he/she/it", "do / does", "plurales irregulares", "la hora"],
   3: ["would like", "can / could", "may / might", "and, but, so, because", "question words", "whose"],
   4: ["pasado simple regular", "pasado simple irregular", "días de la semana"],

@@ -302,7 +302,7 @@ const fraseTocable = (texto) => String(texto).split(/(\s+)/).map((w) => {
   const palabra = w.replace(/^[^A-Za-z0-9']+|[^A-Za-z0-9']+$/g, "");
   return palabra && !/^_+$/.test(w) ? `<span class="palabra" data-palabra="${esc(palabra)}">${esc(w)}</span>` : esc(w);
 }).join("");
-app.addEventListener("click", (e) => {
+document.addEventListener("click", (e) => { // en la página y en el tutor flotante
   const b = e.target.closest("[data-voz]");
   if (b) return hablar(b.dataset.voz);
   const l = e.target.closest("[data-voz-lento]");
@@ -340,6 +340,8 @@ async function vistaRepaso(unidadId = null) {
         </div>`);
     }
     const c = cola[i];
+    ponerContexto(`Tarjeta de repaso ${i + 1} de ${cola.length}`,
+      `Frente (inglés): ${c.frente}\nReverso (español): ${c.reverso}${c.ejemplo ? `\nEjemplo: ${c.ejemplo} = ${c.traduccion || ""}` : ""}\nEstado: ${volteada ? "ya vio la respuesta" : "aún no ve la respuesta"}`);
     pintar(`
       <a href="#/ingles" class="link">← Inglés</a>
       <div class="stats muted"><span>Tarjeta ${i + 1} de ${cola.length}</span><span>✅ ${bien}</span><span>🔁 ${mal}</span></div>
@@ -384,15 +386,38 @@ async function vistaRepaso(unidadId = null) {
 // ---------- enrutador (cambia de pantalla según el # de la dirección) ----------
 let modoRecuperacion = false;
 
+// Nombre de cada pantalla para el tutor flotante y la barra de abajo
+function nombrePantalla(ruta) {
+  if (ruta === "/") return "Inicio";
+  if (ruta === "/ingles") return "Inglés: panel Hoy y lista de episodios";
+  if (ruta.startsWith("/ingles/repaso")) return "Tarjetas de repaso";
+  if (ruta === "/ingles/errores") return "Mis errores";
+  if (ruta === "/ingles/lecturas") return "Lista de Leer y escuchar";
+  if (ruta.startsWith("/ingles/lectura/")) return "Leer y escuchar";
+  if (ruta.startsWith("/ingles/leccion/")) return "Lección";
+  return "App de estudio";
+}
+function marcarNavegacion(ruta, visible) {
+  const enFoco = /^\/ingles\/(leccion|errores|repaso|lectura\/)/.test(ruta); // pantallas sin distracciones
+  const nav = document.getElementById("nav");
+  nav.hidden = !visible || enFoco;
+  document.body.classList.toggle("con-nav", !nav.hidden);
+  nav.querySelectorAll("a").forEach((a) => a.classList.toggle("activo", a.dataset.ruta === ruta));
+  // El tutor flotante va en todas las pantallas, menos en el tutor completo y en "Mi vida"
+  tfVisible(visible && !/^\/ingles\/(tutor|mi-vida)/.test(ruta) && ruta !== "/clave" && ruta !== "/admin");
+}
+
 async function router() {
   const user = await usuarioActual();
-  if (!user) return vistaLogin();
+  if (!user) { marcarNavegacion("/", false); return vistaLogin(); }
   btnSalir.hidden = false;
   if (modoRecuperacion) return vistaClave("Llegaste desde el enlace de recuperación. Crea tu nueva contraseña.");
   const ruta = location.hash.replace(/^#/, "") || "/";
-  if (ruta === "/clave") return vistaClave();
+  if (ruta === "/clave") { marcarNavegacion(ruta, true); return vistaClave(); }
   const perfil = await miPerfil();
-  if (!perfil || !perfil.activo) return vistaPendiente(user);
+  if (!perfil || !perfil.activo) { marcarNavegacion(ruta, false); return vistaPendiente(user); }
+  ponerContexto(nombrePantalla(ruta));
+  marcarNavegacion(ruta, true);
   if (ruta === "/admin" && perfil.rol === "admin") return vistaAdmin(perfil);
   if (ruta === "/ingles") { await cargarHechas(); return vistaIngles(); }
   if (ruta === "/ingles/repaso") return vistaRepaso();
