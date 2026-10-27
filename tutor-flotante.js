@@ -226,7 +226,7 @@ async function tfNueva() {
     </button>
     <section id="tf-panel" class="tf-panel" hidden role="dialog" aria-label="Tutor">
       <header class="tf-head">
-        <div class="tf-avatar">🦉</div>
+        <div class="tf-avatar">✨</div>
         <div style="flex:1;min-width:0">
           <b>Tutor</b>
           <div class="tf-ctx" id="tf-ctx"></div>
