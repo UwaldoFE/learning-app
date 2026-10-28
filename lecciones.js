@@ -41,6 +41,17 @@ function distancia(a, b) { // cuántas letras hay que cambiar para pasar de a a 
   return m[a.length][b.length];
 }
 
+// ---------- dominio por tema (Paso 1 de la hoja de ruta) ----------
+// Cada respuesta suma al tema del pénsum y a su pata (estudio, input, output, fluidez).
+// Si todavía no se corrió db/006, simplemente no guarda nada.
+function registrarDominio(tema, pata, ok) {
+  if (!tema) return;
+  try {
+    db.rpc("registrar_dominio", { p_tema: tema, p_pata: pata || "estudio", p_ok: !!ok, p_fecha: fechaLocal() })
+      .then(({ error }) => { if (error && !/registrar_dominio|does not exist|schema cache|PGRST202/i.test(error.message)) console.warn("dominio:", error.message); });
+  } catch {}
+}
+
 // ---------- XP y racha ----------
 async function resumenEstudio() {
   const desde = fechaLocal(new Date(Date.now() - 60 * 864e5));
@@ -345,6 +356,7 @@ async function vistaLeccion(leccionId) {
     ponerContexto(TF.contexto.pantalla, describirEjercicio(actual, { ok, tuya }));
     const primera = !(actual.id in primerIntento);
     if (primera) primerIntento[actual.id] = ok;
+    if (primera) registrarDominio(actual.tema_id, actual.pata || (t === "escuchar" ? "input" : "estudio"), ok);
     if (ok) {
       combo++; hechos++;
       xp += primera ? XP_PRIMERA : XP_SEGUNDA;

@@ -21,10 +21,10 @@ const LECTURAS = [
       { en: "Today it is sunny and hot.", es: "Hoy está soleado y hace calor." }
     ],
     preguntas: [
-      { q: "What is Laura's job?", es: "¿Cuál es el trabajo de Laura?", opciones: ["She is a nurse.", "She is an engineer.", "She is a teacher."], correcta: 0, ex: "\"She is a nurse\" = Ella es enfermera." },
-      { q: "Tom is ___ engineer.", es: "Tom es ingeniero.", opciones: ["a", "an", "the"], correcta: 1, ex: "\"an\" va antes de sonido de vocal: an engineer, an umbrella." },
-      { q: "What color is Tom's car?", es: "¿De qué color es el carro de Tom?", opciones: ["Blue", "Black", "Red"], correcta: 2, ex: "\"His car is red\" = Su carro es rojo. His = de él." },
-      { q: "Who is taller?", es: "¿Quién es más alto?", opciones: ["Laura", "Tom"], correcta: 1, ex: "\"Tom is taller\" = Tom es más alto. Tall → taller." }
+      { tema: "ep1-profesiones", q: "What is Laura's job?", es: "¿Cuál es el trabajo de Laura?", opciones: ["She is a nurse.", "She is an engineer.", "She is a teacher."], correcta: 0, ex: "\"She is a nurse\" = Ella es enfermera." },
+      { tema: "ep1-a-an", q: "Tom is ___ engineer.", es: "Tom es ingeniero.", opciones: ["a", "an", "the"], correcta: 1, ex: "\"an\" va antes de sonido de vocal: an engineer, an umbrella." },
+      { tema: "ep1-pronombres", q: "What color is Tom's car?", es: "¿De qué color es el carro de Tom?", opciones: ["Blue", "Black", "Red"], correcta: 2, ex: "\"His car is red\" = Su carro es rojo. His = de él." },
+      { tema: "ep1-comparativos", q: "Who is taller?", es: "¿Quién es más alto?", opciones: ["Laura", "Tom"], correcta: 1, ex: "\"Tom is taller\" = Tom es más alto. Tall → taller." }
     ]
   },
   {
@@ -41,10 +41,10 @@ const LECTURAS = [
       { en: "Sam is the happiest man in the city!", es: "¡Sam es el hombre más feliz de la ciudad!" }
     ],
     preguntas: [
-      { q: "What is Mark's job?", es: "¿Cuál es el trabajo de Mark?", opciones: ["He is a lawyer.", "He is a taxi driver.", "He is a nurse."], correcta: 0, ex: "\"He is a lawyer\" = Es abogado. La profesión lleva a/an." },
-      { q: "Who is taller?", es: "¿Quién es más alto?", opciones: ["Mark", "Sam"], correcta: 0, ex: "\"Sam is shorter than Mark\" = Sam es más bajo que Mark, así que Mark es más alto." },
-      { q: "What color are Sam's eyes?", es: "¿De qué color son los ojos de Sam?", opciones: ["Brown", "Black", "Blue"], correcta: 0, ex: "\"big brown eyes\" = ojos grandes y cafés. El adjetivo va antes de eyes." },
-      { q: "Who is older?", es: "¿Quién es mayor?", opciones: ["Sam", "Mark"], correcta: 1, ex: "\"Mark is older than Sam\": old → older than." }
+      { tema: "ep1-profesiones", q: "What is Mark's job?", es: "¿Cuál es el trabajo de Mark?", opciones: ["He is a lawyer.", "He is a taxi driver.", "He is a nurse."], correcta: 0, ex: "\"He is a lawyer\" = Es abogado. La profesión lleva a/an." },
+      { tema: "ep1-comparativos", q: "Who is taller?", es: "¿Quién es más alto?", opciones: ["Mark", "Sam"], correcta: 0, ex: "\"Sam is shorter than Mark\" = Sam es más bajo que Mark, así que Mark es más alto." },
+      { tema: "ep1-cuerpo", q: "What color are Sam's eyes?", es: "¿De qué color son los ojos de Sam?", opciones: ["Brown", "Black", "Blue"], correcta: 0, ex: "\"big brown eyes\" = ojos grandes y cafés. El adjetivo va antes de eyes." },
+      { tema: "ep1-comparativos", q: "Who is older?", es: "¿Quién es mayor?", opciones: ["Sam", "Mark"], correcta: 1, ex: "\"Mark is older than Sam\": old → older than." }
     ]
   },
   {
@@ -61,10 +61,10 @@ const LECTURAS = [
       { en: "Does Tom like his job? Yes, he does.", es: "¿A Tom le gusta su trabajo? Sí." }
     ],
     preguntas: [
-      { q: "What time does Tom wake up?", es: "¿A qué hora se despierta Tom?", opciones: ["At six o'clock.", "At seven o'clock.", "At twelve o'clock."], correcta: 0, ex: "\"Tom wakes up at six\": con he/she el verbo lleva -s (wakes)." },
-      { q: "How does Tom go to work?", es: "¿Cómo va Tom al trabajo?", opciones: ["By car.", "By bus.", "By taxi."], correcta: 1, ex: "\"He goes to work by bus\" = Va en bus. go → goes con he." },
-      { q: "Where does Laura work?", es: "¿Dónde trabaja Laura?", opciones: ["In an office.", "In a school.", "In a hospital."], correcta: 2, ex: "\"She works in a hospital.\" Pregunta con does, respuesta con -s." },
-      { q: "Does Tom like his job?", es: "¿A Tom le gusta su trabajo?", opciones: ["Yes, he do.", "Yes, he does.", "Yes, he likes."], correcta: 1, ex: "Respuesta corta con he/she: \"Yes, he does\" / \"No, he doesn't\"." }
+      { tema: "ep2-hora", q: "What time does Tom wake up?", es: "¿A qué hora se despierta Tom?", opciones: ["At six o'clock.", "At seven o'clock.", "At twelve o'clock."], correcta: 0, ex: "\"Tom wakes up at six\": con he/she el verbo lleva -s (wakes)." },
+      { tema: "ep2-presente-s", q: "How does Tom go to work?", es: "¿Cómo va Tom al trabajo?", opciones: ["By car.", "By bus.", "By taxi."], correcta: 1, ex: "\"He goes to work by bus\" = Va en bus. go → goes con he." },
+      { tema: "ep2-presente-s", q: "Where does Laura work?", es: "¿Dónde trabaja Laura?", opciones: ["In an office.", "In a school.", "In a hospital."], correcta: 2, ex: "\"She works in a hospital.\" Pregunta con does, respuesta con -s." },
+      { tema: "ep2-do-does", q: "Does Tom like his job?", es: "¿A Tom le gusta su trabajo?", opciones: ["Yes, he do.", "Yes, he does.", "Yes, he likes."], correcta: 1, ex: "Respuesta corta con he/she: \"Yes, he does\" / \"No, he doesn't\"." }
     ]
   },
   {
@@ -81,10 +81,10 @@ const LECTURAS = [
       { quien: "Laura", en: "Sure! See you tomorrow. Bye!", es: "¡Claro! Nos vemos mañana. ¡Chao!" }
     ],
     preguntas: [
-      { q: "What would Laura like to do?", es: "¿Qué le gustaría hacer a Laura?", opciones: ["Go to the cinema.", "Go to the airport.", "Have lunch."], correcta: 0, ex: "\"Would you like to go…?\" = ¿Te gustaría ir…? Sirve para invitar." },
-      { q: "Can Tom meet at seven?", es: "¿Tom puede verse a las siete?", opciones: ["Yes, he can.", "No, he can't."], correcta: 1, ex: "\"Sorry, I can't\" = Lo siento, no puedo. can't = can not." },
-      { q: "Why can't Tom meet at seven?", es: "¿Por qué Tom no puede a las siete?", opciones: ["He is tired.", "He works until seven.", "He has a class."], correcta: 1, ex: "\"I work until seven\" = Trabajo hasta las siete." },
-      { q: "\"I'd like that\" means…", es: "\"I'd like that\" significa…", opciones: ["Me gusta eso.", "Me gustaría (eso).", "No me gusta."], correcta: 1, ex: "I'd like = I would like = me gustaría. Es más cortés que \"I want\"." }
+      { tema: "ep3-would-like", q: "What would Laura like to do?", es: "¿Qué le gustaría hacer a Laura?", opciones: ["Go to the cinema.", "Go to the airport.", "Have lunch."], correcta: 0, ex: "\"Would you like to go…?\" = ¿Te gustaría ir…? Sirve para invitar." },
+      { tema: "ep3-can-could", q: "Can Tom meet at seven?", es: "¿Tom puede verse a las siete?", opciones: ["Yes, he can.", "No, he can't."], correcta: 1, ex: "\"Sorry, I can't\" = Lo siento, no puedo. can't = can not." },
+      { tema: "ep3-can-could", q: "Why can't Tom meet at seven?", es: "¿Por qué Tom no puede a las siete?", opciones: ["He is tired.", "He works until seven.", "He has a class."], correcta: 1, ex: "\"I work until seven\" = Trabajo hasta las siete." },
+      { tema: "ep3-would-like", q: "\"I'd like that\" means…", es: "\"I'd like that\" significa…", opciones: ["Me gusta eso.", "Me gustaría (eso).", "No me gusta."], correcta: 1, ex: "I'd like = I would like = me gustaría. Es más cortés que \"I want\"." }
     ]
   },
   {
@@ -101,10 +101,10 @@ const LECTURAS = [
       { en: "Tom smiles and says: \"OK, you win!\"", es: "Tom sonríe y dice: \"¡Está bien, tú ganas!\"" }
     ],
     preguntas: [
-      { q: "Why can't Anna visit the museum on Sunday?", es: "¿Por qué Anna no puede visitar el museo el domingo?", opciones: ["It is closed.", "It is far.", "It is expensive."], correcta: 0, ex: "\"…but it is closed on Sunday\". But = pero (contraste)." },
-      { q: "Why does Anna take an umbrella?", es: "¿Por qué Anna lleva un paraguas?", opciones: ["It is sunny.", "It may rain.", "She likes it."], correcta: 1, ex: "\"It may rain\" = Puede que llueva. May/might = posibilidad." },
-      { q: "Why is Tom tired?", es: "¿Por qué Tom está cansado?", opciones: ["Because he works a lot.", "Because he watches TV.", "Because he is sick."], correcta: 0, ex: "Because = porque (da la razón). So = así que (da la consecuencia)." },
-      { q: "\"He might stay home\" means…", es: "\"He might stay home\" significa…", opciones: ["Debe quedarse en casa.", "Tal vez se quede en casa.", "Se quedó en casa."], correcta: 1, ex: "might + verbo = tal vez / puede que. No cambia: he might stay (sin -s)." }
+      { tema: "ep3-conectores", q: "Why can't Anna visit the museum on Sunday?", es: "¿Por qué Anna no puede visitar el museo el domingo?", opciones: ["It is closed.", "It is far.", "It is expensive."], correcta: 0, ex: "\"…but it is closed on Sunday\". But = pero (contraste)." },
+      { tema: "ep3-may-might", q: "Why does Anna take an umbrella?", es: "¿Por qué Anna lleva un paraguas?", opciones: ["It is sunny.", "It may rain.", "She likes it."], correcta: 1, ex: "\"It may rain\" = Puede que llueva. May/might = posibilidad." },
+      { tema: "ep3-conectores", q: "Why is Tom tired?", es: "¿Por qué Tom está cansado?", opciones: ["Because he works a lot.", "Because he watches TV.", "Because he is sick."], correcta: 0, ex: "Because = porque (da la razón). So = así que (da la consecuencia)." },
+      { tema: "ep3-may-might", q: "\"He might stay home\" means…", es: "\"He might stay home\" significa…", opciones: ["Debe quedarse en casa.", "Tal vez se quede en casa.", "Se quedó en casa."], correcta: 1, ex: "might + verbo = tal vez / puede que. No cambia: he might stay (sin -s)." }
     ]
   },
   {
@@ -123,10 +123,10 @@ const LECTURAS = [
       { quien: "Laura", en: "Here you are. Could I have a receipt, please?", es: "Aquí tiene. ¿Me podría dar un recibo, por favor?" }
     ],
     preguntas: [
-      { q: "Where does Laura want to go?", es: "¿A dónde quiere ir Laura?", opciones: ["To the hospital.", "To the airport.", "To the museum."], correcta: 1, ex: "\"Could you take me to the airport?\" = ¿Me podría llevar al aeropuerto? Could = forma cortés de pedir." },
-      { q: "How long does it take?", es: "¿Cuánto se demora?", opciones: ["Ten minutes.", "Thirty minutes.", "One hour."], correcta: 1, ex: "How long = cuánto tiempo. \"About thirty minutes\" = unos treinta minutos." },
-      { q: "Who lives in Miami?", es: "¿Quién vive en Miami?", opciones: ["Her sister.", "Her brother.", "The driver."], correcta: 1, ex: "\"My brother lives there\": brother = hermano; lives con -s (he)." },
-      { q: "How much is the taxi?", es: "¿Cuánto cuesta el taxi?", opciones: ["$15", "$25", "$35"], correcta: 1, ex: "How much = cuánto (precio). Twenty-five = 25." }
+      { tema: "ep3-can-could", q: "Where does Laura want to go?", es: "¿A dónde quiere ir Laura?", opciones: ["To the hospital.", "To the airport.", "To the museum."], correcta: 1, ex: "\"Could you take me to the airport?\" = ¿Me podría llevar al aeropuerto? Could = forma cortés de pedir." },
+      { tema: "ep3-question-words", q: "How long does it take?", es: "¿Cuánto se demora?", opciones: ["Ten minutes.", "Thirty minutes.", "One hour."], correcta: 1, ex: "How long = cuánto tiempo. \"About thirty minutes\" = unos treinta minutos." },
+      { tema: "ep2-presente-s", q: "Who lives in Miami?", es: "¿Quién vive en Miami?", opciones: ["Her sister.", "Her brother.", "The driver."], correcta: 1, ex: "\"My brother lives there\": brother = hermano; lives con -s (he)." },
+      { tema: "ep3-question-words", q: "How much is the taxi?", es: "¿Cuánto cuesta el taxi?", opciones: ["$15", "$25", "$35"], correcta: 1, ex: "How much = cuánto (precio). Twenty-five = 25." }
     ]
   },
   {
@@ -144,10 +144,10 @@ const LECTURAS = [
       { en: "She runs to her gate.", es: "Corre a su puerta de embarque." }
     ],
     preguntas: [
-      { q: "What color is the bag?", es: "¿De qué color es el bolso?", opciones: ["Blue", "Black", "Red"], correcta: 1, ex: "\"a black bag\": en inglés el color va antes de la cosa." },
-      { q: "Whose bag is it?", es: "¿De quién es el bolso?", opciones: ["The man's bag.", "The woman's bag.", "The boy's bag."], correcta: 2, ex: "Whose = de quién. Se responde con 's: the boy's bag = el bolso del niño." },
-      { q: "Complete: \"___ phone is this?\"", es: "¿De quién es este teléfono?", opciones: ["Who", "Whose", "Where"], correcta: 1, ex: "Para preguntar el dueño: Whose + cosa + is this?" },
-      { q: "\"A quarter to ten\" is…", es: "\"A quarter to ten\" es…", opciones: ["10:15", "9:45", "10:45"], correcta: 1, ex: "\"to\" = para / menos: un cuarto para las diez = 9:45. \"past\" = y: a quarter past ten = 10:15." }
+      { tema: "ep1-adjetivos", q: "What color is the bag?", es: "¿De qué color es el bolso?", opciones: ["Blue", "Black", "Red"], correcta: 1, ex: "\"a black bag\": en inglés el color va antes de la cosa." },
+      { tema: "ep3-whose", q: "Whose bag is it?", es: "¿De quién es el bolso?", opciones: ["The man's bag.", "The woman's bag.", "The boy's bag."], correcta: 2, ex: "Whose = de quién. Se responde con 's: the boy's bag = el bolso del niño." },
+      { tema: "ep3-whose", q: "Complete: \"___ phone is this?\"", es: "¿De quién es este teléfono?", opciones: ["Who", "Whose", "Where"], correcta: 1, ex: "Para preguntar el dueño: Whose + cosa + is this?" },
+      { tema: "ep2-hora", q: "\"A quarter to ten\" is…", es: "\"A quarter to ten\" es…", opciones: ["10:15", "9:45", "10:45"], correcta: 1, ex: "\"to\" = para / menos: un cuarto para las diez = 9:45. \"past\" = y: a quarter past ten = 10:15." }
     ]
   }
 ];
@@ -324,6 +324,7 @@ async function vistaLectura(id) {
     L.preguntas.forEach((p, i) => {
       const ok = sel[i] === p.correcta;
       if (ok) bien++;
+      if (p.tema) registrarDominio(p.tema, "input", ok); // leer y escuchar = pata de input
       app.querySelectorAll(`[data-op^="${i}-"]`).forEach((b) => {
         const j = Number(b.dataset.op.split("-")[1]);
         b.classList.remove("sel");
