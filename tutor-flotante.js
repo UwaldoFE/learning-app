@@ -22,7 +22,8 @@ function ponerContexto(pantalla, detalle = "") {
   if (c) c.textContent = "📍 " + pantalla;
 }
 const etiquetaTipo = { elegir: "Elegir la opción correcta", escuchar: "Escuchar y elegir", ordenar: "Ordenar las palabras",
-  escribir: "Escribir en inglés", emparejar: "Unir parejas" };
+  escribir: "Escribir en inglés", emparejar: "Unir parejas", comprension: "Escuchar o leer y responder",
+  decir: "Decirlo en voz alta", libre: "Respuesta abierta calificada por Wako", rapido: "Ronda rápida contra reloj" };
 // Describe un ejercicio para el tutor. resultado = null (aún no responde) o { ok, tuya }
 function describirEjercicio(ej, resultado = null) {
   const d = ej.datos || {}, l = [`Tipo de ejercicio: ${etiquetaTipo[ej.tipo] || ej.tipo}`];
@@ -32,6 +33,10 @@ function describirEjercicio(ej, resultado = null) {
   if (ej.tipo === "ordenar") l.push(`Debe armar en inglés: ${d.es}`, `Respuesta correcta: ${String(d.frase).replace(/ ([?.!,])/g, "$1")}`);
   if (ej.tipo === "escribir") l.push(`Debe escribir en inglés: ${d.es}`, `Respuesta correcta: ${d.mostrar}`);
   if (ej.tipo === "emparejar") l.push(`Parejas: ${(d.pares || []).map((p) => p.join(" = ")).join(" · ")}`);
+  if (ej.tipo === "comprension") l.push(`Texto (${d.modo === "escuchar" ? "lo escucha, no lo ve" : "lo lee"}): ${(d.lineas || []).map((x) => x.en).join(" ")}`, `Pregunta: ${d.pregunta}`, `Opciones: ${ops}`, `Respuesta correcta: ${d.opciones?.[d.correcta]}`);
+  if (ej.tipo === "decir") l.push(`Debe DECIR en voz alta en inglés: ${d.es}`, `Respuesta modelo: ${d.mostrar}`);
+  if (ej.tipo === "libre") l.push(`Tarea abierta: ${d.pregunta} (${d.pregunta_es})`, `Criterio: ${d.criterio}`, `Ejemplo: ${d.ejemplo}`);
+  if (ej.tipo === "rapido") l.push(`Ronda rápida contra reloj: ${d.frase}`, `Opciones: ${ops}`, `Respuesta correcta: ${d.opciones?.[d.correcta]}`);
   if (d.explicacion) l.push(`Explicación de la app: ${d.explicacion}`);
   l.push(resultado ? `Estado: ya respondió (${resultado.ok ? "bien" : "mal"}). Su respuesta: ${resultado.tuya || "—"}`
     : "Estado: AÚN NO RESPONDE (dale pistas, no la respuesta, salvo que la pida).");

@@ -367,3 +367,13 @@ a.wk-card { display: flex; gap: 16px; align-items: center; }
 @keyframes wk-aparecer { from { transform: scale(.4); opacity: 0; filter: brightness(4); } to { transform: none; opacity: 1; filter: none; } }
 @keyframes wk-latir { 50% { transform: scale(1.15); opacity: .7; } }
 .wk-evo > :not(.wk-evo-luz) { position: relative; }
+
+/* ---------- ejercicios de las 4 patas ---------- */
+.rapido-reloj { height: 8px; border-radius: 999px; background: var(--line); overflow: hidden; margin: 6px 0 10px; }
+.rapido-reloj i { display: block; height: 100%; width: 100%; background: linear-gradient(90deg, var(--orange), var(--yellow)); transition: width .1s linear; }
+.rapido-frase { font-size: 1.6rem; text-align: center; }
+.rapido-ops { grid-template-columns: 1fr 1fr; }
+.rapido-ops .opcion { text-align: center; font-size: 1.15rem; padding: 18px 10px; }
+.mic-grande { font-size: 1.1rem; padding: 16px 26px; }
+.btn.grabando { background: var(--bad); box-shadow: 0 4px 0 var(--bad-dark); animation: latido-mic 1.2s infinite; }
+.dicho { text-align: center; margin: 10px 0; font-size: 1.05rem; min-height: 1.4em; }
