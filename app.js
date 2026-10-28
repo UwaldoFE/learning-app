@@ -31,6 +31,24 @@ async function miPerfil() {
 }
 
 const URL_APP = location.origin + location.pathname;
+
+// Campo de contraseña con ojito 👁 para ver lo que se escribe (sin mayúscula ni corrector automático del celular)
+const campoClave = (id, placeholder, autocomplete) => `
+  <div class="campo-clave">
+    <input type="password" id="${id}" required minlength="6" placeholder="${placeholder}" autocomplete="${autocomplete}"
+      autocapitalize="off" autocorrect="off" spellcheck="false">
+    <button type="button" class="ojo" data-ojo="${id}" aria-label="Mostrar contraseña" title="Mostrar contraseña">👁</button>
+  </div>`;
+document.addEventListener("click", (e) => {
+  const b = e.target.closest("[data-ojo]");
+  if (!b) return;
+  const inp = document.getElementById(b.dataset.ojo);
+  const ver = inp.type === "password";
+  inp.type = ver ? "text" : "password";
+  b.textContent = ver ? "🙈" : "👁";
+  b.title = b.ariaLabel = ver ? "Ocultar contraseña" : "Mostrar contraseña";
+  inp.focus();
+});
 const traducirError = (m = "") =>
   /Invalid login credentials/i.test(m) ? "Correo o contraseña incorrectos."
   : /Email not confirmed/i.test(m) ? "Primero confirma tu correo: revisa tu bandeja (y spam)."
@@ -47,9 +65,9 @@ function vistaLogin(msg = "", modo = "entrar") {
       <h1>${titulos[modo]}</h1>
       <form id="f-login">
         ${modo === "crear" ? `<input type="text" id="nombre" required placeholder="Tu nombre" autocomplete="name">` : ""}
-        <input type="email" id="email" required placeholder="tu@correo.com" autocomplete="email">
-        ${modo !== "olvide" ? `<input type="password" id="clave" required minlength="6" placeholder="Contraseña"
-            autocomplete="${modo === "crear" ? "new-password" : "current-password"}">` : ""}
+        <input type="email" id="email" required placeholder="tu@correo.com" autocomplete="email"
+          autocapitalize="off" autocorrect="off" spellcheck="false" inputmode="email">
+        ${modo !== "olvide" ? campoClave("clave", "Contraseña", modo === "crear" ? "new-password" : "current-password") : ""}
         <button class="btn" id="btn-enviar">${modo === "olvide" ? "Enviarme el enlace" : titulos[modo]}</button>
       </form>
       <p id="login-msg" class="muted">${esc(msg)}</p>
@@ -63,7 +81,8 @@ function vistaLogin(msg = "", modo = "entrar") {
 
   document.getElementById("f-login").onsubmit = async (ev) => {
     ev.preventDefault();
-    const email = document.getElementById("email").value.trim();
+    // En el celular el teclado a veces pone mayúscula al inicio o un espacio al final: se limpia
+    const email = document.getElementById("email").value.trim().toLowerCase();
     const clave = document.getElementById("clave")?.value;
     const btn = document.getElementById("btn-enviar");
     const out = document.getElementById("login-msg");
@@ -71,7 +90,14 @@ function vistaLogin(msg = "", modo = "entrar") {
     let error;
     if (modo === "entrar") {
       ({ error } = await db.auth.signInWithPassword({ email, password: clave }));
+      // Si falló y la clave tiene espacios al inicio o al final (típico del teclado del celular), se intenta sin ellos
+      if (error && clave !== clave.trim()) ({ error } = await db.auth.signInWithPassword({ email, password: clave.trim() }));
       if (!error) return router();
+      if (/Invalid login credentials/i.test(error.message)) {
+        btn.disabled = false;
+        out.textContent = "Correo o contraseña incorrectos. Toca el 👁 para revisar la contraseña: en el celular a veces se pone una mayúscula al inicio sin que te des cuenta.";
+        return;
+      }
     } else if (modo === "crear") {
       const nombre = document.getElementById("nombre").value.trim();
       ({ error } = await db.auth.signUp({
@@ -95,8 +121,8 @@ function vistaClave(msg = "") {
       <h1>Mi contraseña</h1>
       <p class="muted">${esc(msg || "Escribe tu nueva contraseña (mínimo 6 caracteres).")}</p>
       <form id="f-clave">
-        <input type="password" id="c1" required minlength="6" placeholder="Nueva contraseña" autocomplete="new-password">
-        <input type="password" id="c2" required minlength="6" placeholder="Repítela" autocomplete="new-password">
+        ${campoClave("c1", "Nueva contraseña", "new-password")}
+        ${campoClave("c2", "Repítela", "new-password")}
         <button class="btn" id="b-clave">Guardar contraseña</button>
       </form>
       <p id="clave-msg" class="muted"></p>
