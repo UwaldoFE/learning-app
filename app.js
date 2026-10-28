@@ -184,12 +184,13 @@ async function vistaAdmin(yo) {
 }
 
 // ---------- vistas ----------
-function vistaInicio(user, perfil) {
+async function vistaInicio(user, perfil) {
   pintar(`
     <h1>Hola${perfil.nombre ? " " + esc(perfil.nombre) : ""} 👋</h1>
     <p class="muted">${esc(user.email)} ·
       <a href="#/clave">Mi contraseña</a>
       ${perfil.rol === "admin" ? ` · <a href="#/admin">👑 Administrar accesos</a>` : ""}</p>
+    <div id="wk-lugar"></div>
     <div class="grid">
       <a class="card" href="#/ingles">
         <h2>🇬🇧 Inglés</h2>
@@ -202,6 +203,9 @@ function vistaInicio(user, perfil) {
         <span class="tag">Próximamente</span>
       </div>
     </div>`);
+  const lugar = document.getElementById("wk-lugar");
+  const html = await htmlWakoInicio();
+  if (lugar && document.body.contains(lugar)) { lugar.innerHTML = html; conectarWakoInicio(); }
 }
 
 async function vistaIngles() {
@@ -416,6 +420,7 @@ let modoRecuperacion = false;
 function nombrePantalla(ruta) {
   if (ruta === "/") return "Inicio";
   if (ruta === "/ingles") return "Inglés: panel Hoy y lista de episodios";
+  if (ruta === "/wako") return "Wako, su compañero de estudio (bot que crece con su inglés)";
   if (ruta.startsWith("/ingles/repaso")) return "Tarjetas de repaso";
   if (ruta === "/ingles/errores") return "Mis errores";
   if (ruta === "/ingles/lecturas") return "Lista de Leer y escuchar";
@@ -445,7 +450,8 @@ async function router() {
   ponerContexto(nombrePantalla(ruta));
   marcarNavegacion(ruta, true);
   if (ruta === "/admin" && perfil.rol === "admin") return vistaAdmin(perfil);
-  if (ruta === "/ingles") { await cargarHechas(); return vistaIngles(); }
+  if (ruta === "/wako") return vistaWako();
+  if (ruta === "/ingles") { await cargarHechas(); try { await wakoCargar(); } catch {} return vistaIngles(); }
   if (ruta === "/ingles/repaso") return vistaRepaso();
   const m = ruta.match(/^\/ingles\/repaso\/(\d+)$/);
   if (m) return vistaRepaso(Number(m[1]));

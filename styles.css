@@ -276,3 +276,94 @@ body.con-nav .tf-panel { bottom: 182px; height: min(600px, calc(100vh - 210px));
 @keyframes saludar { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(18deg); } 75% { transform: rotate(-12deg); } }
 @keyframes caer { to { transform: translateY(110vh) rotate(720deg); } }
 @media (prefers-reduced-motion: reduce) { *, *::before { animation: none !important; transition: none !important; } }
+
+/* ============================================================
+   🤖 Wako
+   ============================================================ */
+.wako { position: relative; flex: none; cursor: pointer; user-select: none; -webkit-user-select: none; }
+.wk-cuerpo { position: absolute; inset: 0; animation: wk-flotar 3.4s ease-in-out infinite; transform-origin: 50% 100%; }
+.wk-cuerpo img { width: 100%; height: 100%; display: block; filter: drop-shadow(0 10px 14px rgba(31, 26, 77, .25)); transition: filter .5s; }
+.wk-visor, .wk-pecho, .wk-antena { position: absolute; pointer-events: none; }
+.wk-visor { overflow: visible; }
+.wk-antena { aspect-ratio: 1; transform: translate(-50%, -50%); border-radius: 50%; animation: wk-antena 1.8s ease-in-out infinite; }
+/* ánimo */
+.wk-triste .wk-cuerpo { animation-duration: 5s; }
+.wk-enfermo .wk-cuerpo { animation-duration: 6s; }
+.wk-enfermo img { filter: saturate(.55) brightness(.95) drop-shadow(0 10px 14px rgba(31, 26, 77, .2)); }
+.wk-apagado .wk-cuerpo { animation: wk-dormir 5s ease-in-out infinite; }
+.wk-apagado img { filter: grayscale(.85) brightness(.78) drop-shadow(0 8px 10px rgba(31, 26, 77, .2)); }
+.wk-apagado .wk-antena { animation: none; background: #6b6b80; box-shadow: inset 0 -3px 5px rgba(0,0,0,.35); }
+.wk-triste .wk-antena, .wk-enfermo .wk-antena { animation-duration: 3.5s; }
+/* cara */
+.wk-ojos { animation: wk-parpadeo 4.5s infinite; transform-box: fill-box; transform-origin: center; }
+.wk-giro polygon { animation: wk-girar 2.4s linear infinite; transform-box: fill-box; transform-origin: center; }
+.wk-carga { opacity: .15; animation: wk-cargar 1.4s ease-out forwards; }
+.wk-parpadea { animation: wk-titila 1s steps(2) infinite; }
+.wk-z { animation: wk-z 2.4s ease-in-out infinite; }
+/* reacciones */
+.wk-salto .wk-cuerpo { animation: wk-saltar .6s ease-out 2; }
+.wk-sacude .wk-cuerpo { animation: sacudir .4s 2; }
+.wk-brilla .wk-cuerpo { animation: wk-brillar 1.2s ease-in forwards; }
+.wk-aparece .wk-cuerpo { animation: wk-aparecer .7s cubic-bezier(.2, 1.4, .4, 1); }
+
+/* tarjeta en Inicio */
+.wk-card { margin: 16px 0 6px; background: linear-gradient(160deg, var(--card) 0%, var(--accent-soft) 100%); }
+a.wk-card { display: flex; gap: 16px; align-items: center; }
+.wk-fila { display: flex; gap: 18px; align-items: center; }
+.wk-lado { display: grid; place-items: center; min-width: 120px; }
+.wk-info { flex: 1; min-width: 0; }
+.wk-en { font-size: .85rem; font-weight: 700; }
+.wk-energia { display: flex; align-items: center; gap: 10px; margin: 8px 0 4px; font-weight: 800; font-size: .9rem; }
+.wk-barra { flex: 1; height: 14px; border-radius: 999px; background: var(--line); overflow: hidden; }
+.wk-barra i { display: block; height: 100%; border-radius: 999px; transition: width .6s; background: linear-gradient(90deg, #22c55e, #5cff4a); }
+.wk-e-triste i { background: linear-gradient(90deg, #f59e0b, #ffd23f); }
+.wk-e-enfermo i { background: linear-gradient(90deg, #dc2626, #ff4b4b); }
+.wk-msg { margin: 4px 0; font-size: .92rem; }
+.wk-burbuja { display: grid; gap: 2px; font-size: .95rem; min-height: 0; }
+.wk-burbuja:not(:empty) { background: var(--card); border: 2px solid var(--line); border-radius: 14px; padding: 8px 12px; margin-top: 6px; animation: subir .25s ease-out; }
+.wk-burbuja-c { text-align: center; max-width: 340px; margin: 6px auto 0; }
+.wk-sig { margin: 10px 0 0; font-size: .88rem; }
+@media (max-width: 520px) {
+  .wk-fila { flex-direction: column; text-align: center; }
+  .wk-fila .row { justify-content: center !important; }
+  .wk-energia { justify-content: center; }
+}
+/* barra a B2 */
+.wk-b2 { margin-top: 14px; }
+.wk-b2-top { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; font-size: .85rem; margin-bottom: 4px; }
+.wk-b2-barra { position: relative; height: 16px; border-radius: 999px; background: var(--line); margin-bottom: 20px; }
+.wk-b2-barra i { display: block; height: 100%; border-radius: 999px; background: var(--grad); min-width: 16px; }
+.wk-marca { position: absolute; top: -3px; bottom: -3px; width: 3px; background: var(--card); transform: translateX(-50%); border-radius: 2px; }
+.wk-marca em { position: absolute; top: 22px; left: 50%; transform: translateX(-50%); font-style: normal; font-size: .72rem; font-weight: 900; color: var(--muted); }
+.wk-marca:last-child { transform: translateX(-100%); }
+.wk-marca:last-child em { left: auto; right: -4px; transform: none; color: var(--accent); }
+/* pantalla de Wako */
+.wk-grande { margin-top: 10px; }
+.wk-escena { display: grid; place-items: center; padding: 10px 0 0; }
+.wk-galeria { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; margin-top: 12px; }
+.wk-g { background: var(--card); border: 2px solid var(--line); border-radius: 16px; padding: 10px 6px; display: grid; justify-items: center; gap: 2px; text-align: center; font-size: .82rem; }
+.wk-g .muted { font-size: .74rem; }
+.wk-g-img { position: relative; height: 112px; display: grid; place-items: end center; }
+.wk-g .wako { cursor: default; }
+.wk-actual { border-color: var(--accent); background: var(--accent-soft); box-shadow: 0 4px 0 var(--accent); }
+.wk-bloq .wako img { filter: brightness(0) opacity(.22); }
+.wk-bloq .wk-visor, .wk-bloq .wk-pecho, .wk-bloq .wk-antena { display: none; }
+.wk-bloq .wk-cuerpo { animation: none; }
+.wk-candado { position: absolute; inset: 0; display: grid; place-items: center; font-size: 1.8rem; font-weight: 900; color: var(--muted); }
+/* evolución */
+.wk-evo { position: relative; text-align: center; padding: 30px 0; overflow: hidden; }
+.wk-evo-luz { position: absolute; inset: -40%; background: radial-gradient(circle, rgba(255, 210, 63, .45), transparent 60%); animation: wk-latir 1.6s ease-in-out infinite; pointer-events: none; }
+
+@keyframes wk-flotar { 50% { transform: translateY(-7px); } }
+@keyframes wk-dormir { 50% { transform: translateY(2px) rotate(-1.5deg); } }
+@keyframes wk-antena { 0%, 100% { box-shadow: 0 0 6px 2px rgba(255, 214, 64, .55); } 50% { box-shadow: 0 0 16px 7px rgba(255, 214, 64, .9); } }
+@keyframes wk-parpadeo { 0%, 93%, 100% { transform: scaleY(1); } 96% { transform: scaleY(.12); } }
+@keyframes wk-girar { to { transform: rotate(360deg); } }
+@keyframes wk-cargar { to { opacity: 1; } }
+@keyframes wk-titila { 50% { opacity: .15; } }
+@keyframes wk-z { 0%, 100% { opacity: .2; transform: translateY(4px); } 50% { opacity: 1; transform: translateY(-4px); } }
+@keyframes wk-saltar { 0%, 100% { transform: translateY(0) scale(1); } 30% { transform: translateY(-24px) scale(1.04, .97); } 60% { transform: translateY(0) scale(1.05, .94); } }
+@keyframes wk-brillar { 60% { filter: brightness(2.2); transform: scale(1.06); } 100% { filter: brightness(6) blur(2px); transform: scale(.85); opacity: .6; } }
+@keyframes wk-aparecer { from { transform: scale(.4); opacity: 0; filter: brightness(4); } to { transform: none; opacity: 1; filter: none; } }
+@keyframes wk-latir { 50% { transform: scale(1.15); opacity: .7; } }
+.wk-evo > :not(.wk-evo-luz) { position: relative; }

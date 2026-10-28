@@ -5,7 +5,7 @@
 const META_XP = 50;          // meta diaria de XP
 const XP_PRIMERA = 10;       // XP por acertar al primer intento
 const XP_SEGUNDA = 5;        // XP por acertar un ejercicio que se repitió
-const EPISODIO_EVALUACION = 3; // próxima evaluación en el instituto: cámbialo cuando apruebes
+let EPISODIO_EVALUACION = 3; // próxima evaluación en el instituto (Wako la actualiza con tus episodios aprobados)
 
 // Fecha local de Colombia (no UTC), para que la racha cuente bien de noche
 const fechaLocal = (d = new Date()) =>
