@@ -252,6 +252,7 @@ body.con-nav .tf-panel { bottom: 182px; height: min(600px, calc(100vh - 210px));
 .tf-mic { background: var(--card); border: 2px solid var(--line); box-shadow: 0 3px 0 var(--line); color: var(--ink); }
 .tf-mic.grabando { width: auto; padding: 0 12px; background: var(--bad); color: #fff; border-color: var(--bad); box-shadow: 0 3px 0 var(--bad-dark);
   font-size: .95rem; animation: latido-mic 1.2s infinite; }
+.tf-mic.grabando { transform: scale(calc(1 + var(--voz, 0) * .18)); box-shadow: 0 3px 0 var(--bad-dark), 0 0 0 calc(var(--voz, 0) * 10px) rgba(240, 71, 92, .25); }
 .tf-env { background: var(--accent); color: #fff; box-shadow: 0 3px 0 var(--accent-dark); }
 .tf-mic:disabled, .tf-env:disabled { opacity: .5; cursor: default; }
 

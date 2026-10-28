@@ -8,7 +8,9 @@
 const SUPA_URL = "https://idkwjntidyqdurosvyqp.supabase.co";
 const SUPA_KEY = "sb_publishable_SNqxRaUtg80WT4NdQO0g4Q_DaPThv0i";
 
+const { transcribir } = require("./_transcribir");
 const LIMITE_DIARIO = 60;          // mensajes al tutor por día
+const LIMITE_AUDIOS = 60;          // audios al micrófono por día
 const MAX_HISTORIAL = 16;          // últimos mensajes que se envían a la IA
 // Si un modelo deja de existir, se prueba el siguiente.
 const MODELOS = [process.env.OPENAI_MODEL, "gpt-4.1-mini", "gpt-4o-mini", "gpt-5-mini"].filter(Boolean);
@@ -102,32 +104,49 @@ module.exports = async (req, res) => {
   if (!token.startsWith("Bearer ")) return res.status(401).json({ error: "Inicia sesión." });
   const yo = await supa("/auth/v1/user", token);
   if (!yo.ok || !yo.data?.id) return res.status(401).json({ error: "Tu sesión venció. Vuelve a entrar." });
-  const perfil = await supa(`/rest/v1/perfiles?id=eq.${yo.data.id}&select=activo`, token);
-  if (!perfil.ok || !perfil.data?.[0]?.activo) return res.status(403).json({ error: "Tu cuenta aún no está activa." });
 
-  // 2) Tope diario
+  // 2) Todo lo demás se pide a la vez (más rápido): perfil activo, uso de hoy, "Mi vida" y errores
   const fecha = fechaColombia();
-  const uso = await supa(`/rest/v1/tutor_uso?fecha=eq.${fecha}&select=mensajes`, token);
-  if (faltaTabla(uso)) return res.status(503).json({ error: "Falta correr db/003_tutor.sql en Supabase.", codigo: "falta_sql" });
-  const usados = uso.data?.[0]?.mensajes || 0;
-  if (usados >= LIMITE_DIARIO) return res.status(429).json({ error: `Llegaste al tope de ${LIMITE_DIARIO} mensajes de hoy. ¡Mañana seguimos!`, usados, limite: LIMITE_DIARIO });
-
-  // 3) Contexto: tu ficha "Mi vida" y tus errores pendientes
-  const { modo = "libre", episodio = 3, escenario = "" } = req.body || {};
-  const contexto = String(req.body?.contexto || "").slice(0, 1200);
-  const [vida, err] = await Promise.all([
+  const [perfil, uso, vida, err] = await Promise.all([
+    supa(`/rest/v1/perfiles?id=eq.${yo.data.id}&select=activo`, token),
+    supa(`/rest/v1/tutor_uso?fecha=eq.${fecha}&select=*`, token),
     supa(`/rest/v1/mi_vida?select=texto`, token),
     supa(`/rest/v1/mis_errores?resuelto=eq.false&select=ejercicios(datos)&order=fallos.desc&limit=8`, token)
   ]);
+  if (!perfil.ok || !perfil.data?.[0]?.activo) return res.status(403).json({ error: "Tu cuenta aún no está activa." });
+  if (faltaTabla(uso)) return res.status(503).json({ error: "Falta correr db/003_tutor.sql en Supabase.", codigo: "falta_sql" });
+  const usados = uso.data?.[0]?.mensajes || 0;
+  const audios = uso.data?.[0]?.audios || 0;
+  if (usados >= LIMITE_DIARIO) return res.status(429).json({ error: `Llegaste al tope de ${LIMITE_DIARIO} mensajes de hoy. ¡Mañana seguimos!`, usados, limite: LIMITE_DIARIO });
+
+  // 3) Contexto
+  const { modo = "libre", episodio = 3, escenario = "" } = req.body || {};
+  const contexto = String(req.body?.contexto || "").slice(0, 1200);
   const miVida = String(vida.data?.[0]?.texto || "").slice(0, 1500);
   const errores = (Array.isArray(err.data) ? err.data : [])
     .map((r) => r.ejercicios?.datos?.explicacion).filter(Boolean).map((t) => String(t).slice(0, 160));
+
+  // 3b) Si llega audio (micrófono), se pasa a texto aquí mismo: un solo viaje en vez de dos
+  let texto = "";
+  if (req.body?.audio) {
+    if (audios >= LIMITE_AUDIOS) return res.status(429).json({ error: `Llegaste al tope de ${LIMITE_AUDIOS} audios de hoy. Puedes seguir escribiendo.` });
+    const pistas = contexto.replace(/Respuesta correcta:[^\n]*/g, "").replace(/[^A-Za-z' \n?.,]/g, " ").replace(/\s+/g, " ").slice(0, 400);
+    try { texto = await transcribir(req.body.audio, req.body.tipo || "audio/webm", pistas); }
+    catch (e) {
+      if (e.codigo === "vacio") return res.status(400).json({ error: "No se escuchó nada. Toca 🎤, habla y vuelve a tocar." });
+      if (e.codigo === "largo") return res.status(413).json({ error: "El audio es muy largo. Habla máximo 1 minuto." });
+      if (/quota|billing|insufficient/i.test(String(e.message))) return res.status(402).json({ error: "Se acabó el saldo de OpenAI. Recarga en platform.openai.com → Billing.", codigo: "sin_saldo" });
+      return res.status(502).json({ error: "No se pudo pasar el audio a texto. Intenta de nuevo." });
+    }
+    if (!texto) return res.status(422).json({ error: "No te entendí. Intenta de nuevo, un poco más cerca del micrófono." });
+  }
 
   // 4) Conversación (limpia y corta)
   const historial = (Array.isArray(req.body?.mensajes) ? req.body.mensajes : [])
     .filter((m) => (m.role === "user" || m.role === "assistant") && typeof m.content === "string")
     .slice(-MAX_HISTORIAL)
     .map((m) => ({ role: m.role, content: m.content.slice(0, 1200) }));
+  if (texto) historial.push({ role: "user", content: texto });
   if (!historial.length) historial.push({ role: "user", content: "(Start the session now.)" });
 
   try {
@@ -137,9 +156,9 @@ module.exports = async (req, res) => {
     limpio.bien = r.bien !== false && !limpio.correccion;
     await supa(`/rest/v1/tutor_uso?on_conflict=user_id,fecha`, token, {
       method: "POST", headers: { Prefer: "resolution=merge-duplicates" },
-      body: JSON.stringify({ fecha, mensajes: usados + 1 })
+      body: JSON.stringify(texto ? { fecha, mensajes: usados + 1, audios: audios + 1 } : { fecha, mensajes: usados + 1 })
     });
-    return res.status(200).json({ respuesta: limpio, usados: usados + 1, limite: LIMITE_DIARIO });
+    return res.status(200).json({ respuesta: limpio, texto, usados: usados + 1, limite: LIMITE_DIARIO });
   } catch (e) {
     const msg = String(e.message || e);
     if (/quota|billing|insufficient/i.test(msg)) return res.status(402).json({ error: "Se acabó el saldo de OpenAI. Recarga en platform.openai.com → Billing.", codigo: "sin_saldo" });

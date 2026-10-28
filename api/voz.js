@@ -5,10 +5,8 @@
 const SUPA_URL = "https://idkwjntidyqdurosvyqp.supabase.co";
 const SUPA_KEY = "sb_publishable_SNqxRaUtg80WT4NdQO0g4Q_DaPThv0i";
 
+const { transcribir } = require("./_transcribir");
 const LIMITE_AUDIOS = 60;              // audios por día
-const MAX_BYTES = 3 * 1024 * 1024;     // ~1 minuto de audio
-const MODELOS = [process.env.OPENAI_TRANSCRIBE_MODEL, "gpt-4o-mini-transcribe", "whisper-1"].filter(Boolean);
-const PISTA = "The speaker is a Spanish-speaking English learner from Colombia. He may speak in English, in Spanish, or mix both. Write exactly what he says, keeping his grammar mistakes.";
 
 const fechaColombia = () => new Date(Date.now() - 5 * 3600e3).toISOString().slice(0, 10);
 
@@ -21,26 +19,6 @@ async function supa(ruta, token, opciones = {}) {
   let data = null;
   try { data = texto ? JSON.parse(texto) : null; } catch { data = texto; }
   return { ok: r.ok, status: r.status, data };
-}
-
-const extension = (tipo) => /mp4|m4a|aac/.test(tipo) ? "m4a" : /ogg/.test(tipo) ? "ogg" : /wav/.test(tipo) ? "wav" : /mpeg|mp3/.test(tipo) ? "mp3" : "webm";
-
-async function transcribir(buffer, tipo) {
-  let ultimoError = "";
-  for (const model of MODELOS) {
-    const form = new FormData();
-    form.append("file", new Blob([buffer], { type: tipo }), `audio.${extension(tipo)}`);
-    form.append("model", model);
-    form.append("prompt", PISTA);
-    const r = await fetch("https://api.openai.com/v1/audio/transcriptions", {
-      method: "POST", headers: { Authorization: `Bearer ${process.env.OPENAI_API_KEY}` }, body: form
-    });
-    const data = await r.json().catch(() => ({}));
-    if (r.ok) return String(data.text || "").trim();
-    ultimoError = data.error?.message || `HTTP ${r.status}`;
-    if (!/model/i.test(ultimoError) || /quota|billing|api key/i.test(ultimoError)) break;
-  }
-  throw new Error(ultimoError);
 }
 
 module.exports = async (req, res) => {
@@ -64,12 +42,8 @@ module.exports = async (req, res) => {
 
   // 3) El audio llega en base64
   const { audio = "", tipo = "audio/webm" } = req.body || {};
-  const buffer = Buffer.from(String(audio), "base64");
-  if (buffer.length < 1000) return res.status(400).json({ error: "No se escuchó nada. Mantén el micrófono un poco más." });
-  if (buffer.length > MAX_BYTES) return res.status(413).json({ error: "El audio es muy largo. Habla máximo 1 minuto." });
-
   try {
-    const texto = await transcribir(buffer, String(tipo).split(";")[0] || "audio/webm");
+    const texto = await transcribir(audio, tipo);
     await supa(`/rest/v1/tutor_uso?on_conflict=user_id,fecha`, token, {
       method: "POST", headers: { Prefer: "resolution=merge-duplicates" },
       body: JSON.stringify({ fecha, audios: audios + 1 })
@@ -77,6 +51,8 @@ module.exports = async (req, res) => {
     if (!texto) return res.status(422).json({ error: "No entendí el audio. Intenta de nuevo, un poco más cerca del micrófono." });
     return res.status(200).json({ texto });
   } catch (e) {
+    if (e.codigo === "vacio") return res.status(400).json({ error: "No se escuchó nada. Mantén el micrófono un poco más." });
+    if (e.codigo === "largo") return res.status(413).json({ error: "El audio es muy largo. Habla máximo 1 minuto." });
     const msg = String(e.message || e);
     if (/quota|billing|insufficient/i.test(msg)) return res.status(402).json({ error: "Se acabó el saldo de OpenAI. Recarga en platform.openai.com → Billing." });
     return res.status(502).json({ error: "No se pudo pasar el audio a texto. Intenta de nuevo.", detalle: msg.slice(0, 200) });

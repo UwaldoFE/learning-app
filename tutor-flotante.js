@@ -60,7 +60,7 @@ async function tfCargar() {
   TF.cargado = true;
 }
 async function tfGuardar() {
-  TF.mensajes = TF.mensajes.slice(-TF_MAX_GUARDADOS);
+  TF.mensajes = TF.mensajes.filter((x) => !x.provisional).slice(-TF_MAX_GUARDADOS);
   const actualizado = new Date().toISOString();
   try { localStorage.setItem(tfClave(), JSON.stringify({ mensajes: TF.mensajes, actualizado })); } catch {}
   try { if (TF.userId) await db.from("tutor_chat").upsert({ user_id: TF.userId, mensajes: TF.mensajes, actualizado }); } catch {}
@@ -84,7 +84,8 @@ function tfCerrar() {
   if (p) p.hidden = true;
   document.getElementById("tf-btn")?.classList.remove("abierto");
   document.body.classList.remove("tf-abierto");
-  if (TF.grabando) TF.grabando.cancelar = true, TF.grabando.stop();
+  if (TF.grabando) { TF.grabando.cancelar = true; TF.grabando.stop(); }
+  tfSoltarMic();
 }
 
 // ---------- pintar la conversación ----------
@@ -104,12 +105,12 @@ function tfPintar() {
   body.scrollTop = body.scrollHeight;
   const mic = document.getElementById("tf-mic");
   mic.classList.toggle("grabando", !!TF.grabando);
-  mic.innerHTML = TF.grabando ? `⏹ ${TF.segundos}s` : "🎤";
+  mic.innerHTML = TF.grabando ? (TF.grabando.parando ? "⏳" : `⏹ ${TF.segundos}s`) : "🎤";
   mic.title = TF.grabando ? "Toca para enviar" : "Hablar";
   document.getElementById("tf-env").disabled = TF.enviando;
   mic.disabled = TF.enviando && !TF.grabando;
   document.getElementById("tf-ctx").textContent = "📍 " + TF.contexto.pantalla;
-  document.getElementById("tf-in").placeholder = TF.grabando ? "🎙 Te escucho… toca ⏹ para enviar" : "Write or ask…  (escribe o pregunta)";
+  document.getElementById("tf-in").placeholder = TF.grabando ? "🎙 Te escucho… toca ⏹" : "Write or ask…  (escribe o pregunta)";
 }
 const tfError = (m) => { const e = document.getElementById("tf-err"); if (e) e.textContent = m || ""; };
 
@@ -152,38 +153,82 @@ async function tfEnviar(texto, { voz = false } = {}) {
 }
 
 // ---------- micrófono ----------
+// El micrófono queda "despierto" mientras el chat está abierto (así la siguiente grabación empieza al instante)
+// y se apaga solo al cerrar el chat o tras 45 s sin usarlo.
 const tfPuedeGrabar = () => !!(navigator.mediaDevices?.getUserMedia && window.MediaRecorder);
+const TF_MIC_DESPIERTO_MS = 45000;
+const TF_COLA_MS = 350; // al tocar ⏹ se graba un instante más para no cortar la última palabra
+function tfSoltarMic() {
+  clearTimeout(TF.dormir);
+  try { TF.stream?.getTracks().forEach((t) => t.stop()); } catch {}
+  try { TF.audioCtx?.close(); } catch {}
+  TF.stream = null; TF.audioCtx = null; TF.analizador = null;
+}
+async function tfStream() {
+  clearTimeout(TF.dormir);
+  if (TF.stream && TF.stream.getTracks().some((t) => t.readyState === "live")) return TF.stream;
+  TF.stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true } });
+  try { // medidor de volumen: el botón se mueve con tu voz
+    TF.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    TF.analizador = TF.audioCtx.createAnalyser();
+    TF.analizador.fftSize = 256;
+    TF.audioCtx.createMediaStreamSource(TF.stream).connect(TF.analizador);
+  } catch { TF.analizador = null; }
+  return TF.stream;
+}
+function tfMedirVoz() {
+  const mic = document.getElementById("tf-mic");
+  if (!TF.grabando || !TF.analizador) { mic.style.removeProperty("--voz"); return; }
+  const d = new Uint8Array(TF.analizador.fftSize);
+  TF.analizador.getByteTimeDomainData(d);
+  let suma = 0; for (const v of d) suma += ((v - 128) / 128) ** 2;
+  const nivel = Math.min(1, Math.sqrt(suma / d.length) * 6);
+  if (nivel > 0.15) TF.oido = true;
+  mic.style.setProperty("--voz", nivel.toFixed(2));
+  requestAnimationFrame(tfMedirVoz);
+}
 async function tfMic() {
-  if (TF.grabando) return TF.grabando.stop();
+  if (TF.grabando) { // segundo toque: terminar (con un instante de cola)
+    const rec = TF.grabando;
+    if (rec.parando) return;
+    rec.parando = true;
+    document.getElementById("tf-mic").innerHTML = "⏳";
+    return setTimeout(() => rec.state !== "inactive" && rec.stop(), TF_COLA_MS);
+  }
   if (!tfPuedeGrabar()) return tfError("Este navegador no deja usar el micrófono. Prueba con Chrome o Safari actualizado.");
   tfError("");
   try { speechSynthesis.cancel(); } catch {}
+  const mic = document.getElementById("tf-mic");
+  mic.innerHTML = "…";
   let stream;
-  try { stream = await navigator.mediaDevices.getUserMedia({ audio: true }); }
-  catch { return tfError("No tengo permiso para el micrófono. Actívalo en el candado 🔒 de la barra de direcciones."); }
+  try { stream = await tfStream(); }
+  catch { tfPintar(); return tfError("No tengo permiso para el micrófono. Actívalo en el candado 🔒 de la barra de direcciones."); }
   const tipo = ["audio/webm;codecs=opus", "audio/webm", "audio/mp4", "audio/ogg"].find((t) => MediaRecorder.isTypeSupported?.(t)) || "";
-  const rec = new MediaRecorder(stream, tipo ? { mimeType: tipo } : undefined);
+  const rec = new MediaRecorder(stream, tipo ? { mimeType: tipo, audioBitsPerSecond: 32000 } : undefined);
   const trozos = [];
   rec.ondataavailable = (e) => { if (e.data?.size) trozos.push(e.data); };
   rec.onstop = async () => {
-    stream.getTracks().forEach((t) => t.stop());
     clearInterval(TF.reloj);
-    const cancelado = rec.cancelar;
+    const cancelado = rec.cancelar, oido = TF.oido;
     TF.grabando = null;
+    TF.dormir = setTimeout(tfSoltarMic, TF_MIC_DESPIERTO_MS);
     if (TF.abierto) tfPintar();
     if (cancelado) return;
     const blob = new Blob(trozos, { type: rec.mimeType || tipo || "audio/webm" });
-    if (blob.size < 1000) return tfError("No se escuchó nada. Toca 🎤, habla y vuelve a tocar para enviar.");
+    if (blob.size < 1000 || !oido) return tfError("No te escuché. Toca 🎤, espera la vibración, habla y vuelve a tocar.");
     await tfEnviarAudio(blob);
   };
-  rec.start();
-  TF.grabando = rec; TF.segundos = 0;
+  if (TF.audioCtx?.state === "suspended") { try { await TF.audioCtx.resume(); } catch {} }
+  rec.start(250);
+  TF.grabando = rec; TF.segundos = 0; TF.oido = !TF.analizador; // sin medidor no se puede saber: se asume que sí
+  try { navigator.vibrate?.(40); } catch {}
   TF.reloj = setInterval(() => {
     TF.segundos++;
     if (TF.segundos >= TF_MAX_SEGUNDOS) rec.stop();
     tfPintar();
   }, 1000);
   tfPintar();
+  tfMedirVoz();
 }
 const aBase64 = (blob) => new Promise((ok, mal) => {
   const r = new FileReader();
@@ -191,22 +236,40 @@ const aBase64 = (blob) => new Promise((ok, mal) => {
   r.onerror = mal;
   r.readAsDataURL(blob);
 });
+// El audio va directo al tutor: él lo pasa a texto y responde en el mismo viaje
 async function tfEnviarAudio(blob) {
+  if (TF.enviando) return;
+  tfError("");
+  const provisional = { role: "user", content: "🎧 Escuchando tu audio…", voz: true, provisional: true };
+  TF.mensajes.push(provisional);
   TF.enviando = true; tfPintar();
   try {
     const { data } = await db.auth.getSession();
-    const r = await fetch("/api/voz", {
+    const c = TF.contexto;
+    const historial = TF.mensajes.filter((x) => !x.provisional).slice(-TF_MAX_ENVIADOS)
+      .map((x) => ({ role: x.role, content: x.role === "user" ? x.content : JSON.stringify(x.r) }));
+    const r = await fetch("/api/tutor", {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${data.session?.access_token || ""}` },
-      body: JSON.stringify({ audio: await aBase64(blob), tipo: blob.type })
+      body: JSON.stringify({
+        modo: "flotante", episodio: TF.episodio || 3,
+        contexto: `Pantalla: ${c.pantalla}${c.detalle ? "\n" + c.detalle : ""}`,
+        mensajes: historial, audio: await aBase64(blob), tipo: blob.type
+      })
     });
     const j = await r.json().catch(() => ({}));
-    TF.enviando = false;
-    if (!r.ok) { tfPintar(); return tfError(j.error || "No se pudo pasar el audio a texto."); }
-    await tfEnviar(j.texto, { voz: true });
+    TF.mensajes = TF.mensajes.filter((x) => x !== provisional);
+    if (!r.ok) return tfError(j.error || "El tutor no pudo responder. Intenta de nuevo.");
+    TF.mensajes.push({ role: "user", content: j.texto, voz: true });
+    TF.mensajes.push({ role: "assistant", r: j.respuesta, bien: j.respuesta.bien, tras: true });
+    await tfGuardar();
+    if (j.respuesta.mensaje) { try { hablar(j.respuesta.mensaje); } catch {} }
+    try { await sumarXP(XP_TUTOR); } catch {}
   } catch {
-    TF.enviando = false; tfPintar();
+    TF.mensajes = TF.mensajes.filter((x) => x !== provisional);
     tfError("Sin conexión. Revisa tu internet.");
+  } finally {
+    TF.enviando = false; tfPintar();
   }
 }
 
