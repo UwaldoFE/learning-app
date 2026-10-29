@@ -43,10 +43,28 @@ function describirEjercicio(ej, resultado = null) {
   return l.join("\n");
 }
 
+// ---------- la cara de Wako en el botón y en el chat ----------
+// animo: feliz | emocionado | pensando | triste | apagado (usa wakoCara de wako.js)
+let tfAnimoBase = "feliz";
+function tfCara(animo = null, ms = 0) {
+  if (typeof wakoCara !== "function") return;
+  const a = animo || tfAnimoBase;
+  const visor = (cls) => `<svg class="${cls}" viewBox="0 0 220 100">${wakoCara(a === "pensando" ? "cargando" : a, ++wakoContador)}</svg>`;
+  const boton = document.getElementById("tf-cara"), av = document.getElementById("tf-avatar");
+  if (boton) boton.innerHTML = `<span class="tf-cabeza">${visor("tf-visor")}</span>`;
+  if (av) av.innerHTML = `<span class="tf-cabeza tf-cabeza-chica">${visor("tf-visor")}</span>`;
+  if (ms) setTimeout(() => tfCara(), ms);
+}
+async function tfActualizarAnimo() {
+  try { const est = WK.estado || (WK.fila !== undefined ? await wakoCargar() : null); if (est?.registrado) tfAnimoBase = est.animo === "emocionado" ? "feliz" : est.animo; } catch {}
+  tfCara();
+}
+
 // ---------- mostrar u ocultar el botón según la pantalla ----------
 function tfVisible(si) {
   document.getElementById("tf-btn").hidden = !si;
   if (!si) tfCerrar();
+  else tfActualizarAnimo();
 }
 
 // ---------- memoria ----------
@@ -102,7 +120,7 @@ function tfPintar() {
   body.innerHTML = burbujas || `
     <div class="tf-vacio">
       <div class="tf-hola">👋</div>
-      <b>¡Hola! Soy tu tutor.</b>
+      <b>¡Hola! Soy Wako, tu tutor. 🤖</b>
       <p class="muted">Pregúntame en español sobre lo que tienes en pantalla, o háblame en inglés y te corrijo.
         Toca 🎤 para hablarme en voz.</p>
     </div>`;
@@ -125,7 +143,7 @@ async function tfEnviar(texto, { voz = false } = {}) {
   if (!texto || TF.enviando) return;
   tfError("");
   TF.mensajes.push({ role: "user", content: texto, voz });
-  TF.enviando = true; tfPintar();
+  TF.enviando = true; tfPintar(); tfCara("pensando");
   try {
     const { data } = await db.auth.getSession();
     const c = TF.contexto;
@@ -133,7 +151,7 @@ async function tfEnviar(texto, { voz = false } = {}) {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${data.session?.access_token || ""}` },
       body: JSON.stringify({
-        modo: "flotante", episodio: TF.episodio || 3,
+        modo: "flotante", episodio: TF.episodio || 3, etapa: WK.estado?.etapa?.n || 3,
         contexto: `Pantalla: ${c.pantalla}${c.detalle ? "\n" + c.detalle : ""}`,
         mensajes: TF.mensajes.slice(-TF_MAX_ENVIADOS).map((x) => ({ role: x.role, content: x.role === "user" ? x.content : JSON.stringify(x.r) }))
       })
@@ -146,6 +164,7 @@ async function tfEnviar(texto, { voz = false } = {}) {
       return;
     }
     TF.mensajes.push({ role: "assistant", r: j.respuesta, bien: j.respuesta.bien, tras: true });
+    tfCara(j.respuesta.correccion ? "feliz" : "emocionado", 2500);
     await tfGuardar();
     if (voz && j.respuesta.mensaje) { try { hablar(j.respuesta.mensaje); } catch {} }
     try { await sumarXP(XP_TUTOR); if (typeof energiaSumarMinutos === "function") energiaSumarMinutos(1); } catch {}
@@ -154,6 +173,7 @@ async function tfEnviar(texto, { voz = false } = {}) {
     tfError("Sin conexión con el tutor. Revisa tu internet.");
   } finally {
     TF.enviando = false; tfPintar();
+    if (!TF.mensajes.length || TF.mensajes[TF.mensajes.length - 1].role !== "assistant") tfCara();
   }
 }
 
@@ -247,7 +267,7 @@ async function tfEnviarAudio(blob) {
   tfError("");
   const provisional = { role: "user", content: "🎧 Escuchando tu audio…", voz: true, provisional: true };
   TF.mensajes.push(provisional);
-  TF.enviando = true; tfPintar();
+  TF.enviando = true; tfPintar(); tfCara("pensando");
   try {
     const { data } = await db.auth.getSession();
     const c = TF.contexto;
@@ -257,7 +277,7 @@ async function tfEnviarAudio(blob) {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${data.session?.access_token || ""}` },
       body: JSON.stringify({
-        modo: "flotante", episodio: TF.episodio || 3,
+        modo: "flotante", episodio: TF.episodio || 3, etapa: WK.estado?.etapa?.n || 3,
         contexto: `Pantalla: ${c.pantalla}${c.detalle ? "\n" + c.detalle : ""}`,
         mensajes: historial, audio: await aBase64(blob), tipo: blob.type
       })
@@ -267,6 +287,7 @@ async function tfEnviarAudio(blob) {
     if (!r.ok) return tfError(j.error || "El tutor no pudo responder. Intenta de nuevo.");
     TF.mensajes.push({ role: "user", content: j.texto, voz: true });
     TF.mensajes.push({ role: "assistant", r: j.respuesta, bien: j.respuesta.bien, tras: true });
+    tfCara(j.respuesta.correccion ? "feliz" : "emocionado", 2500);
     await tfGuardar();
     if (j.respuesta.mensaje) { try { hablar(j.respuesta.mensaje); } catch {} }
     try { await sumarXP(XP_TUTOR); if (typeof energiaSumarMinutos === "function") energiaSumarMinutos(1); } catch {}
@@ -275,6 +296,7 @@ async function tfEnviarAudio(blob) {
     tfError("Sin conexión. Revisa tu internet.");
   } finally {
     TF.enviando = false; tfPintar();
+    if (!TF.mensajes.length || TF.mensajes[TF.mensajes.length - 1].role !== "assistant") tfCara();
   }
 }
 
@@ -290,13 +312,13 @@ async function tfNueva() {
 (function crearTutorFlotante() {
   document.body.insertAdjacentHTML("beforeend", `
     <button id="tf-btn" class="tf-btn" hidden aria-label="Abrir el tutor">
-      <span class="tf-ico">💬</span><span class="tf-x">✕</span>
+      <span class="tf-ico" id="tf-cara"><span class="tf-emoji">💬</span></span><span class="tf-x">✕</span>
     </button>
     <section id="tf-panel" class="tf-panel" hidden role="dialog" aria-label="Tutor">
       <header class="tf-head">
-        <div class="tf-avatar">✨</div>
+        <div class="tf-avatar" id="tf-avatar">✨</div>
         <div style="flex:1;min-width:0">
-          <b>Tutor</b>
+          <b>Wako</b> <span class="tf-sub">tu tutor</span>
           <div class="tf-ctx" id="tf-ctx"></div>
         </div>
         <a class="tf-ic" href="#/ingles/tutor" title="Tutor completo (modos)">⤢</a>

@@ -48,11 +48,21 @@ async function supa(ruta, token, opciones = {}) {
 
 const faltaTabla = (r) => !r.ok && /tutor_uso|mi_vida|does not exist|schema cache|PGRST205|42P01/i.test(JSON.stringify(r.data));
 
-function instrucciones({ modo, episodio, escenario, miVida, errores, contexto }) {
+// Personalidad de Wako según su etapa (crece con el estudiante)
+const PERSONALIDAD = [
+  [2, "You are Wako, a tiny baby robot that just hatched from an egg. You are sweet, curious and excited. Speak in very short, simple English (3–6 words per sentence). Sometimes say 'beep!' or 'boop!'."],
+  [4, "You are Wako, a small toddler robot. You are playful, cheerful and encouraging. Very short, simple sentences; you love when the student practices with you."],
+  [6, "You are Wako, a kid robot. You are friendly, funny and proud of the student. Short simple sentences, a little playful."],
+  [8, "You are Wako, a pre-teen/teen robot. You are energetic, motivating and a bit cool. Clear, natural, simple English."],
+  [10, "You are Wako, an adult master robot. You are wise, warm and motivating, like a coach. Natural English, still adapted to the student's level."]
+];
+const personalidad = (etapa) => (PERSONALIDAD.find(([max]) => (Number(etapa) || 1) <= max) || PERSONALIDAD[4])[1];
+
+function instrucciones({ modo, episodio, escenario, miVida, errores, contexto, etapa }) {
   const ep = Math.min(Math.max(Number(episodio) || 3, 1), 7);
-  const permitidos = Object.entries(TEMAS).filter(([n]) => Number(n) <= ep).map(([n, t]) => `Ep${n}: ${t}`).join("\n");
-  return `You are a warm, patient English tutor for a Spanish-speaking adult from Colombia (beginner, about A1). He studies English by "episodes".
-He is preparing Episode ${ep}. Use ONLY grammar and vocabulary from these episodes (simple present, can, would like, etc.). Short sentences. No idioms. No past or future tenses unless his episode includes them.
+  const permitidos = Object.entries(TEMAS).filter(([n]) => Number(n) <= ep).map(([n, t]) => `Level ${n}: ${t}`).join("\n");
+  return `${personalidad(etapa)} Your body is a white and blue robot with a visor screen face, an antenna with a yellow light and a battery on your chest; students charge your battery by studying. Never say you are an AI model: you are Wako, the student's study robot. You are a warm, patient English tutor for a Spanish-speaking adult from Colombia (beginner, about A1). He studies English by "levels" (Level = episode of his institute).
+He is preparing Level ${ep}. Use ONLY grammar and vocabulary from these levels (simple present, can, would like, etc.). Short sentences. No idioms. No past or future tenses unless his episode includes them.
 ${permitidos}
 
 ${MODOS[modo] || MODOS.libre}
@@ -120,7 +130,7 @@ module.exports = async (req, res) => {
   if (usados >= LIMITE_DIARIO) return res.status(429).json({ error: `Llegaste al tope de ${LIMITE_DIARIO} mensajes de hoy. ¡Mañana seguimos!`, usados, limite: LIMITE_DIARIO });
 
   // 3) Contexto
-  const { modo = "libre", episodio = 3, escenario = "" } = req.body || {};
+  const { modo = "libre", episodio = 3, escenario = "", etapa = 3 } = req.body || {};
   const contexto = String(req.body?.contexto || "").slice(0, 1200);
   const miVida = String(vida.data?.[0]?.texto || "").slice(0, 1500);
   const errores = (Array.isArray(err.data) ? err.data : [])
@@ -150,7 +160,7 @@ module.exports = async (req, res) => {
   if (!historial.length) historial.push({ role: "user", content: "(Start the session now.)" });
 
   try {
-    const r = await llamarOpenAI([{ role: "system", content: instrucciones({ modo, episodio, escenario, miVida, errores, contexto }) }, ...historial]);
+    const r = await llamarOpenAI([{ role: "system", content: instrucciones({ modo, episodio, escenario, miVida, errores, contexto, etapa }) }, ...historial]);
     const limpio = {};
     for (const k of ["correccion", "correccion_es", "explicacion", "nota", "mensaje", "mensaje_es"]) limpio[k] = String(r[k] ?? "").trim();
     limpio.bien = r.bien !== false && !limpio.correccion;

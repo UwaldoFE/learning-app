@@ -43,7 +43,7 @@ async function vistaTutor() {
   const ep = sesionTutor.episodio = sesionTutor.mensajes.length ? sesionTutor.episodio : await episodioActual();
   pintar(`
     <a href="#/ingles" class="link">← Inglés</a>
-    <h1>💬 Tutor</h1>
+    <h1>🤖 Wako, tu tutor</h1>
     <p class="muted">Practica escribiendo. Te corrige con la traducción y una explicación corta.</p>
     <div class="row" style="justify-content:flex-start;margin:10px 0">
       <label class="muted">Nivel:
@@ -115,7 +115,7 @@ function pintarChat() {
     <div class="t-chat" id="t-chat">
       ${burbujas || (sesionTutor.modo === "traducir"
         ? `<div class="t-ia"><div class="t-msg">Escribe en <b>español</b> lo que quieres decir (por ejemplo, un mensaje para un cliente) y te muestro cómo se dice en inglés.</div></div>` : "")}
-      <div id="t-pensando" class="muted" hidden>El tutor está escribiendo…</div>
+      <div id="t-pensando" class="muted" hidden>Wako está escribiendo…</div>
     </div>
     <p class="error" id="t-err"></p>
     <div class="t-caja">
@@ -142,7 +142,7 @@ async function enviarAlTutor(texto, { oculto = false } = {}) {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${data.session?.access_token || ""}` },
       body: JSON.stringify({
-        modo: sesionTutor.modo, episodio: sesionTutor.episodio, escenario: sesionTutor.escenario,
+        modo: sesionTutor.modo, episodio: sesionTutor.episodio, escenario: sesionTutor.escenario, etapa: WK.estado?.etapa?.n || 3,
         mensajes: sesionTutor.mensajes.map((x) => ({ role: x.role, content: x.role === "user" ? x.content : JSON.stringify(x.r) }))
       })
     });

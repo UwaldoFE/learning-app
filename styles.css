@@ -404,3 +404,18 @@ a.wk-card { display: flex; gap: 16px; align-items: center; }
 .medalla { background: #fff4d6; color: #7a4b00; border-radius: 999px; padding: 4px 12px; font-weight: 800; font-size: .85rem; }
 .nic-parte { margin: 12px 0; }
 .nic-ok { border-color: var(--green); background: var(--ok-bg); }
+
+/* ---------- Wako en el botón flotante ---------- */
+.tf-btn { background: radial-gradient(circle at 35% 30%, #ffffff 0%, #e8eefc 55%, #c9d6f5 100%); border: 3px solid #2f6fe0; box-shadow: 0 5px 0 #1d4fb3, 0 10px 24px rgba(47, 111, 224, .45); }
+.tf-btn::before { background: #2f6fe0; }
+.tf-btn::after { content: ""; position: absolute; top: -12px; left: 50%; width: 3px; height: 12px; background: #2f6fe0; transform: translateX(-50%); }
+.tf-btn .tf-ico { display: grid; place-items: center; position: relative; }
+.tf-btn .tf-ico::before { content: ""; position: absolute; top: -27px; left: 50%; width: 10px; height: 10px; border-radius: 50%; background: #ffd23f; transform: translateX(-50%); box-shadow: 0 0 8px 2px rgba(255, 210, 63, .8); animation: wk-antena 1.8s ease-in-out infinite; }
+.tf-btn.abierto { background: var(--grad); border-color: transparent; }
+.tf-btn.abierto::after, .tf-btn.abierto .tf-ico::before { display: none; }
+.tf-btn.abierto .tf-x { color: #fff; }
+.tf-cabeza { display: grid; place-items: center; width: 44px; height: 26px; border-radius: 12px; background: #0b1020; border: 2px solid #2f6fe0; overflow: hidden; }
+.tf-cabeza-chica { width: 34px; height: 21px; border-radius: 9px; }
+.tf-visor { width: 92%; height: 92%; }
+.tf-avatar { background: rgba(255,255,255,.9) !important; }
+.tf-sub { font-size: .75rem; font-weight: 700; opacity: .85; }

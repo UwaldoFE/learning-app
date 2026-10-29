@@ -129,6 +129,8 @@ async function wakoCargar(forzar = false) {
     evoluciona: !!WK.fila && etapa.n > (WK.fila.etapa_vista || 1)
   };
   WK.cargado = true;
+  // la cabeza de Wako en el botón del tutor refleja su ánimo
+  if (typeof tfCara === "function" && WK.estado.registrado) { tfAnimoBase = WK.estado.animo === "emocionado" ? "feliz" : WK.estado.animo; tfCara(); }
   return WK.estado;
 }
 
