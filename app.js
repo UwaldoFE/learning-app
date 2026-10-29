@@ -194,7 +194,7 @@ async function vistaInicio(user, perfil) {
     <div class="grid">
       <a class="card" href="#/ingles">
         <h2>🇬🇧 Inglés</h2>
-        <p class="muted">Lecciones por episodio, mis errores, racha y tarjetas de repaso.</p>
+        <p class="muted">Mi camino por niveles, mis temas, práctica libre y tarjetas de repaso.</p>
         <span class="tag">Entrar →</span>
       </a>
       <div class="card">
@@ -263,15 +263,15 @@ async function vistaIngles() {
   // Agrupar las unidades por episodio (así evalúa el instituto)
   const numEp = (un) => Number(String(un.episodio || "").replace(/\D/g, "")) || 0;
   const episodios = [...new Set(u.data.map(numEp))].filter(Boolean).sort((a, b) => a - b);
-  const epActual = lec.siguiente?.episodio ?? episodios[0];
+  const epActual = (WK.fila ? nivelActual() : null) ?? lec.siguiente?.episodio ?? episodios[0];
   const episodiosHtml = episodios.map((ep) => `
     <details class="episodio" ${ep === epActual ? "open" : ""}>
-      <summary>Episodio ${ep}
+      <summary>Nivel ${ep} <span class="muted" style="font-weight:600">· Ep. ${ep} del instituto</span>
         ${ep === epActual ? `<span class="pill ok">Estás aquí</span>` : ""}
         <span class="muted" style="font-weight:400">· Unidades ${u.data.filter((un) => numEp(un) === ep).map((un) => un.numero).join(", ")}</span>
       </summary>
       <div class="episodio-body">
-        ${htmlLeccionesDe(ep, lec) || `<p class="muted">Lecciones de este episodio: próximamente.</p>`}
+        ${htmlLeccionesDe(ep, lec) || `<p class="muted">Lecciones de este nivel: próximamente.</p>`}
         ${htmlLecturasDe(ep)}
         <div class="sec" style="margin-top:14px">Temas del libro</div>
         ${u.data.filter((un) => numEp(un) === ep).map(htmlUnidad).join("")}
@@ -283,7 +283,7 @@ async function vistaIngles() {
     <a href="#/" class="link">← Inicio</a>
     <h1>🇬🇧 Inglés</h1>
     ${htmlPanelHoy(lec, p)}
-    <h2 style="margin-top:24px">Episodios</h2>
+    <h2 style="margin-top:24px">Niveles</h2>
     ${episodiosHtml}
     ${sinEpisodio.map(htmlUnidad).join("")}`);
 }
@@ -421,6 +421,9 @@ function nombrePantalla(ruta) {
   if (ruta === "/") return "Inicio";
   if (ruta === "/ingles") return "Inglés: panel Hoy y lista de episodios";
   if (ruta === "/wako") return "Wako, su compañero de estudio (bot que crece con su inglés)";
+  if (ruta === "/temas") return "Mis temas: semáforo de dominio por tema del nivel";
+  if (ruta === "/ubicacion") return "Examen de ubicación (no des respuestas)";
+  if (ruta === "/nowican") return "Now I Can: examen para subir de nivel (no des respuestas)";
   if (ruta.startsWith("/ingles/repaso")) return "Tarjetas de repaso";
   if (ruta === "/ingles/errores") return "Mis errores";
   if (ruta === "/ingles/lecturas") return "Lista de Leer y escuchar";
@@ -429,13 +432,13 @@ function nombrePantalla(ruta) {
   return "App de estudio";
 }
 function marcarNavegacion(ruta, visible) {
-  const enFoco = /^\/ingles\/(leccion|errores|repaso|lectura\/)/.test(ruta); // pantallas sin distracciones
+  const enFoco = /^\/ingles\/(leccion|errores|repaso|lectura\/)/.test(ruta) || /^\/(camino|ubicacion)$/.test(ruta); // pantallas sin distracciones
   const nav = document.getElementById("nav");
   nav.hidden = !visible || enFoco;
   document.body.classList.toggle("con-nav", !nav.hidden);
   nav.querySelectorAll("a").forEach((a) => a.classList.toggle("activo", a.dataset.ruta === ruta));
   // El tutor flotante va en todas las pantallas, menos en el tutor completo y en "Mi vida"
-  tfVisible(visible && !/^\/ingles\/(tutor|mi-vida)/.test(ruta) && ruta !== "/clave" && ruta !== "/admin");
+  tfVisible(visible && !/^\/ingles\/(tutor|mi-vida)/.test(ruta) && !/^\/(clave|admin|ubicacion|nowican)$/.test(ruta));
 }
 
 async function router() {
@@ -451,6 +454,10 @@ async function router() {
   marcarNavegacion(ruta, true);
   if (ruta === "/admin" && perfil.rol === "admin") return vistaAdmin(perfil);
   if (ruta === "/wako") return vistaWako();
+  if (ruta === "/camino") return vistaCamino();
+  if (ruta === "/temas") return vistaTemas();
+  if (ruta === "/ubicacion") return vistaUbicacion();
+  if (ruta === "/nowican") return vistaNowICan();
   if (ruta === "/ingles") { await cargarHechas(); try { await wakoCargar(); } catch {} return vistaIngles(); }
   if (ruta === "/ingles/repaso") return vistaRepaso();
   const m = ruta.match(/^\/ingles\/repaso\/(\d+)$/);

@@ -228,7 +228,7 @@ async function vistaLecturas() {
     <a href="#/ingles" class="link">← Inglés</a>
     <h1>📖 Leer y escuchar</h1>
     <p class="muted">Historias cortas con lo de cada episodio. Primero escucha sin leer, luego lee, y al final responde.</p>
-    ${eps.map((ep) => `<h2 style="margin-top:20px">Episodio ${ep}</h2>${htmlLecturasDe(ep).replace(/<div class="sec"[^>]*>.*?<\/div>/, "")}`).join("")}`);
+    ${eps.map((ep) => `<h2 style="margin-top:20px">Nivel ${ep} <span class="muted" style="font-size:.85rem">· Ep. ${ep} del instituto</span></h2>${htmlLecturasDe(ep).replace(/<div class="sec"[^>]*>.*?<\/div>/, "")}`).join("")}`);
 }
 
 async function vistaLectura(id) {
@@ -241,7 +241,7 @@ async function vistaLectura(id) {
   pintar(`
     <a href="#/ingles/lecturas" class="link">← Leer y escuchar</a>
     <h1>${esc(L.titulo)}</h1>
-    <p class="muted">Episodio ${L.episodio} · ${esc(L.tema)}</p>
+    <p class="muted">Nivel ${L.episodio} · ${esc(L.tema)}</p>
 
     <div class="card lect-paso">
       <div class="sec">1 · Escucha primero, sin leer</div>
@@ -341,6 +341,7 @@ async function vistaLectura(id) {
     const xp = anterior === undefined ? bien * XP_PREGUNTA : Math.max(0, bien - anterior) * XP_PREGUNTA;
     guardarHecha(L.id, bien);
     guardarHechaCuenta(L.id, bien);
+    if (typeof energiaSumarMinutos === "function") energiaSumarMinutos(5); // práctica libre: 10 min = ½ raya
     try { await sumarXP(xp); } catch { /* si falla, igual mostramos el resultado */ }
     const idx = LECTURAS.indexOf(L), siguiente = LECTURAS[idx + 1];
     document.getElementById("l-final").innerHTML = `

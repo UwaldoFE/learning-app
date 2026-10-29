@@ -125,11 +125,10 @@ function htmlPanelHoy(d, tarjetasPendientes) {
           <div class="barra"><i style="width:${pct}%"></i></div>
         </div>
       </div>
-      ${d.siguiente ? `
-        <a class="btn grande" href="#/ingles/leccion/${d.siguiente.id}">
-          ▶ ${d.mias[d.siguiente.id] ? "Repetir" : "Continuar"}: ${esc(d.siguiente.titulo)}</a>` : `
-        <p class="muted">¡Completaste todas las lecciones cargadas! 🎉</p>`}
+      <a class="btn grande" href="#/camino">▶ Mi camino · bloque de 10 min</a>
+      ${d.siguiente ? `<div style="margin-top:8px"><a class="link" href="#/ingles/leccion/${d.siguiente.id}">o práctica libre: ${esc(d.siguiente.titulo)}</a></div>` : ""}
       <div class="row" style="justify-content:flex-start">
+        <a class="btn alt" href="#/temas">🚦 Mis temas</a>
         ${d.errores ? `<a class="btn alt" href="#/ingles/errores">🎯 Mis errores (${d.errores})</a>` : ""}
         <a class="btn alt" href="#/ingles/tutor">💬 Tutor</a>
         <a class="btn alt" href="#/ingles/lecturas">📖 Leer y escuchar</a>
@@ -218,7 +217,7 @@ function grabarVoz(boton, alTexto, alError) {
 async function evaluarConWako(datos, respuesta, episodio) {
   const { data } = await db.auth.getSession();
   const r = await fetch("/api/evaluar", { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${data.session?.access_token || ""}` },
-    body: JSON.stringify({ tarea: datos.pregunta, tarea_es: datos.pregunta_es, criterio: datos.criterio, ejemplo: datos.ejemplo, respuesta, episodio, tema: datos.tema || "" }) });
+    body: JSON.stringify({ tarea: datos.pregunta, tarea_es: datos.pregunta_es, criterio: datos.criterio, ejemplo: datos.ejemplo, respuesta, episodio, tema: datos.tema || "", rubrica: datos.rubrica || null }) });
   const j = await r.json().catch(() => ({}));
   if (!r.ok) throw new Error(j.error || "Wako no pudo calificar. Intenta de nuevo.");
   return j;
@@ -244,7 +243,7 @@ async function vistaLeccion(leccionId) {
     titulo = l.data.titulo;
     ejercicios = e.data;
     // El banco de práctica se ve como una muestra corta y mezclada (sin repetir lo reservado para exámenes)
-    if (l.data.tipo === "banco") { titulo = `Vista previa · 4 patas · Episodio ${l.data.episodio}`; ejercicios = mezclar(ejercicios.filter((x) => !x.reservado)).slice(0, 12); }
+    if (l.data.tipo === "banco") { titulo = `Vista previa · 4 patas · Nivel ${l.data.episodio}`; ejercicios = mezclar(ejercicios.filter((x) => !x.reservado)).slice(0, 12); }
   }
   if (!ejercicios.length) return pintar(`
     <a href="#/ingles" class="link">← Inglés</a>

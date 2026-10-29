@@ -148,7 +148,7 @@ async function tfEnviar(texto, { voz = false } = {}) {
     TF.mensajes.push({ role: "assistant", r: j.respuesta, bien: j.respuesta.bien, tras: true });
     await tfGuardar();
     if (voz && j.respuesta.mensaje) { try { hablar(j.respuesta.mensaje); } catch {} }
-    try { await sumarXP(XP_TUTOR); } catch {}
+    try { await sumarXP(XP_TUTOR); if (typeof energiaSumarMinutos === "function") energiaSumarMinutos(1); } catch {}
   } catch (e) {
     TF.mensajes.pop();
     tfError("Sin conexión con el tutor. Revisa tu internet.");
@@ -269,7 +269,7 @@ async function tfEnviarAudio(blob) {
     TF.mensajes.push({ role: "assistant", r: j.respuesta, bien: j.respuesta.bien, tras: true });
     await tfGuardar();
     if (j.respuesta.mensaje) { try { hablar(j.respuesta.mensaje); } catch {} }
-    try { await sumarXP(XP_TUTOR); } catch {}
+    try { await sumarXP(XP_TUTOR); if (typeof energiaSumarMinutos === "function") energiaSumarMinutos(1); } catch {}
   } catch {
     TF.mensajes = TF.mensajes.filter((x) => x !== provisional);
     tfError("Sin conexión. Revisa tu internet.");

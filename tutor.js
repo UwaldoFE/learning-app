@@ -46,7 +46,7 @@ async function vistaTutor() {
     <h1>💬 Tutor</h1>
     <p class="muted">Practica escribiendo. Te corrige con la traducción y una explicación corta.</p>
     <div class="row" style="justify-content:flex-start;margin:10px 0">
-      <label class="muted">Episodio:
+      <label class="muted">Nivel:
         <select id="t-ep">${[1, 2, 3, 4, 5, 6, 7].map((n) => `<option ${n === ep ? "selected" : ""}>${n}</option>`).join("")}</select>
       </label>
       <a class="btn alt" href="#/ingles/mi-vida">📝 Mi vida</a>
@@ -110,7 +110,7 @@ function pintarChat() {
   pintar(`
     <div class="lec-top">
       <a href="#/ingles/tutor" class="link" id="t-menu">← Modos</a>
-      <span class="muted" style="flex:1;text-align:right">${m.icono} ${m.nombre}${sesionTutor.escenario ? " · " + esc(sesionTutor.escenario) : ""} · Ep ${sesionTutor.episodio}</span>
+      <span class="muted" style="flex:1;text-align:right">${m.icono} ${m.nombre}${sesionTutor.escenario ? " · " + esc(sesionTutor.escenario) : ""} · Nivel ${sesionTutor.episodio}</span>
     </div>
     <div class="t-chat" id="t-chat">
       ${burbujas || (sesionTutor.modo === "traducir"
@@ -159,7 +159,7 @@ async function enviarAlTutor(texto, { oculto = false } = {}) {
     const ultimoYo = [...sesionTutor.mensajes].reverse().find((x) => x.role === "user" && !x.oculto);
     sesionTutor.mensajes.push({ role: "assistant", r: j.respuesta, bien: j.respuesta.bien, tras: !!(texto && !oculto && ultimoYo) });
     pintarChat();
-    if (texto && !oculto) { try { await sumarXP(XP_TUTOR); } catch {} }
+    if (texto && !oculto) { try { await sumarXP(XP_TUTOR); if (typeof energiaSumarMinutos === "function") energiaSumarMinutos(1); } catch {} }
   } catch (e) {
     document.getElementById("t-err").textContent = "Sin conexión con el tutor. Intenta de nuevo.";
   } finally {
