@@ -258,6 +258,7 @@ async function htmlWakoInicio() {
           <div class="row" style="justify-content:flex-start;margin-top:8px">
             <a class="btn" href="#/camino">▶ Mi camino (10 min)</a>
             <a class="btn alt" href="#/temas">🚦 Mis temas</a>
+            <a class="btn alt" href="#/wako">🤖 Ver a Wako</a>
           </div>
         </div>
       </div>
@@ -287,8 +288,6 @@ async function vistaWako() {
   if (est.evoluciona) return wakoEvolucion(est);
 
   const sig = siguienteEtapa(est.etapa.n);
-  let medallas = [];
-  try { const m = await db.from("mis_medallas").select("episodio").order("episodio"); medallas = m.error ? null : m.data.map((x) => x.episodio); } catch { medallas = null; }
   pintar(`
     <a href="#/" class="link">← Inicio</a>
     <div class="card wk-grande">
@@ -307,6 +306,7 @@ async function vistaWako() {
       <p style="margin:6px 0">⚡ <b>Energía:</b> cada bloque de Mi camino = 1 raya; 10 min de práctica libre = ½ raya. Meta: ${est.meta} rayas al día. Lo que pases de la meta se guarda como reserva 🔋 para días sin estudio.</p>
       <p style="margin:6px 0">🌱 <b>Crecer:</b> domina todos los temas del nivel (🚦 Mis temas) y aprueba el <b>Now I Can</b>. Así subes de nivel y Wako evoluciona.</p>
       <p style="margin:6px 0">😴 Si no estudias se pone triste, luego enfermo y se apaga, pero nunca pierde su etapa.</p>
+      <p style="margin:6px 0">🏁 El instituto sigue siendo tu evaluación oficial; en la app subes de nivel demostrando con el Now I Can.</p>
       <label class="muted">Mi meta diaria:
         <select id="wk-meta">${[3, 4, 5, 6].map((n) => `<option value="${n}" ${n === est.meta ? "selected" : ""}>${n} rayas (${n * 10} min)</option>`).join("")}</select></label>
     </div>
@@ -323,32 +323,14 @@ async function vistaWako() {
       }).join("")}
     </div>
 
-    <div class="card" style="margin-top:20px">
-      <div class="sec">🏅 Medallas del instituto</div>
-      ${medallas === null ? `<p class="muted">Para guardar medallas, corre <code>db/008_energia_y_examenes.sql</code> en Supabase.</p>` : `
-      <p class="muted">Registra aquí los episodios que te aprueban en el instituto. Son medallas de recuerdo: <b>no hacen crecer a Wako</b> (eso solo pasa al demostrar en la app que sabes).</p>
-      <div class="medallas">${medallas.length ? medallas.map((n) => `<span class="medalla">🏅 Ep. ${n}</span>`).join("") : `<span class="muted">Todavía sin medallas.</span>`}</div>
-      <div class="row" style="justify-content:flex-start">
-        <select id="wk-med">${Array.from({ length: WAKO_EPISODIOS }, (_, i) => i + 1).filter((n) => !medallas.includes(n)).map((n) => `<option value="${n}">Episodio ${n}</option>`).join("")}</select>
-        <button class="btn alt" id="wk-med-ok">🏅 Lo aprobé en el instituto</button>
-      </div>`}
-      <p class="error" id="wk-err"></p>
-    </div>`);
+`);
   const el = document.querySelector("#wk-escena .wako");
   wakoAnimarCarga(el, est);
   el.onclick = () => wakoTocar(el, est, document.getElementById("wk-burbuja"));
-  const err = (m) => (document.getElementById("wk-err").textContent = m);
   document.getElementById("wk-meta").onchange = async (e) => {
-    try { await wakoGuardar({ meta_rayas: Number(e.target.value) }); vistaWako(); } catch (er) { err("No se pudo guardar la meta (¿falta correr el 008?)."); }
+    try { await wakoGuardar({ meta_rayas: Number(e.target.value) }); vistaWako(); } catch (er) { alert("No se pudo guardar la meta."); }
   };
-  const bm = document.getElementById("wk-med-ok");
-  if (bm) bm.onclick = async () => {
-    const n = Number(document.getElementById("wk-med").value);
-    const user = await usuarioActual();
-    const { error } = await db.from("mis_medallas").upsert({ user_id: user.id, episodio: n, fecha: fechaLocal() });
-    if (error) return err("No se pudo guardar: " + error.message);
-    vistaWako();
-  };
+
 }
 
 // Primera vez: Wako nace como huevo. Si ya estudiaste, el examen de ubicación lo pone en su lugar.
