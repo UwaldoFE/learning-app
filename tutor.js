@@ -106,7 +106,7 @@ function pintarChat() {
   const m = MODOS_TUTOR[sesionTutor.modo];
   const burbujas = sesionTutor.mensajes.filter((x) => !x.oculto).map((x) => x.role === "user"
     ? `<div class="t-yo">${esc(x.content)}</div>`
-    : `<div class="t-ia">${x.bien && sesionTutor.modo !== "traducir" && x.tras ? `<div class="t-ok">✅ ¡Bien dicho!</div>` : ""}${htmlRespuesta(x.r)}</div>`).join("");
+    : `<div class="t-ia">${x.bien && sesionTutor.modo !== "traducir" && x.tras ? `<div class="t-ok">✅ ¡Bien dicho!</div>` : ""}${htmlRespuesta(x.r)}${x.sumo?.length ? `<div class="t-sumo">🗣 +1 en Mis temas: ${x.sumo.map((id) => esc(nombreTema(id))).join(", ")}</div>` : ""}</div>`).join("");
   pintar(`
     <div class="lec-top">
       <a href="#/ingles/tutor" class="link" id="t-menu">← Modos</a>
@@ -143,6 +143,7 @@ async function enviarAlTutor(texto, { oculto = false } = {}) {
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${data.session?.access_token || ""}` },
       body: JSON.stringify({
         modo: sesionTutor.modo, episodio: sesionTutor.episodio, escenario: sesionTutor.escenario, etapa: WK.estado?.etapa?.n || 3,
+        temas: sesionTutor.modo !== "traducir" && typeof temasParaWako === "function" ? await temasParaWako() : [],
         mensajes: sesionTutor.mensajes.map((x) => ({ role: x.role, content: x.role === "user" ? x.content : JSON.stringify(x.r) }))
       })
     });
@@ -157,7 +158,8 @@ async function enviarAlTutor(texto, { oculto = false } = {}) {
     }
     sesionTutor.usados = j.usados; sesionTutor.limite = j.limite;
     const ultimoYo = [...sesionTutor.mensajes].reverse().find((x) => x.role === "user" && !x.oculto);
-    sesionTutor.mensajes.push({ role: "assistant", r: j.respuesta, bien: j.respuesta.bien, tras: !!(texto && !oculto && ultimoYo) });
+    sesionTutor.mensajes.push({ role: "assistant", r: j.respuesta, bien: j.respuesta.bien, tras: !!(texto && !oculto && ultimoYo),
+      sumo: texto && !oculto && typeof registrarDesdeChat === "function" ? registrarDesdeChat(j.respuesta) : [] });
     pintarChat();
     if (texto && !oculto) { try { await sumarXP(XP_TUTOR); if (typeof energiaSumarMinutos === "function") energiaSumarMinutos(1); } catch {} }
   } catch (e) {

@@ -85,6 +85,7 @@ async function ubicacionNivel(nivel, aprobados) {
   const preguntas = [...mezclar(Object.values(porTema)).slice(0, 8), ...mezclar(r.rapidos).slice(0, 2)];
   jugarEjercicios({
     titulo: `Ubicación · Nivel ${nivel}`, ejercicios: preguntas, modo: "examen", salir: "#/", episodio: nivel,
+    clave: `ubicacion-${nivel}`, pool: [...r.reservados, ...r.rapidos],
     alTerminar: async ({ precision, resultados }) => {
       try { await guardarExamen(nivel, "ubicacion", precision, { aciertos: resultados.filter((x) => x.ok).length, total: resultados.length }); } catch {}
       if (precision >= APROBAR) {
@@ -170,6 +171,7 @@ async function nicTest(nivel) {
   const preguntas = [...mezclar(r.reservados.filter((x) => x.tipo !== "libre")).slice(0, 15), ...mezclar(r.rapidos).slice(0, 3)];
   jugarEjercicios({
     titulo: `Now I Can ${nivel} · Test Yourself`, ejercicios: preguntas, modo: "examen", salir: "#/nowican", episodio: nivel,
+    clave: `nowican-${nivel}`, pool: [...r.reservados, ...r.rapidos],
     alTerminar: async ({ precision, resultados }) => {
       try { await guardarExamen(nivel, "test", precision, { aciertos: resultados.filter((x) => x.ok).length, total: resultados.length }); }
       catch (e) { return pintar(errorBox(e)); }

@@ -249,28 +249,92 @@ async function vistaLeccion(leccionId) {
     <a href="#/ingles" class="link">← Inglés</a>
     <div class="card flash" style="margin-top:16px"><div class="big">✅ Nada pendiente</div>
     <p class="muted">No tienes errores por repasar. ¡Bien!</p></div>`);
-  jugarEjercicios({ titulo, ejercicios, leccionId, modo: modoErrores ? "errores" : "leccion" });
+  // Cada vez que empiezas, las preguntas salen en otro orden
+  const todos = ejercicios;
+  jugarEjercicios({ titulo, ejercicios: mezclar(todos), leccionId, modo: modoErrores ? "errores" : "leccion",
+    clave: `leccion-${leccionId}`, pool: todos, alReiniciar: () => mezclar(todos) });
 }
 
 // Reproductor general: lecciones, Mis errores, "Mi camino" y exámenes.
 // modo: "leccion" | "errores" | "camino" | "examen". En examen no se muestran respuestas ni se repiten ejercicios.
 // alTerminar({ xp, precision, resultados }) se usa en camino y examen.
-async function jugarEjercicios({ titulo, ejercicios, leccionId = null, modo = "leccion", salir = "#/ingles", alTerminar = null, episodio = null }) {
+// ---------- avance guardado: si sales o se corta la conexión, retomas donde ibas ----------
+const AVANCE_HORAS = 18; // después de esto, el avance guardado se descarta
+const claveAvance = (uid, clave) => `avance-${uid}-${clave}`;
+function leerAvance(uid, clave) {
+  try {
+    const a = JSON.parse(localStorage.getItem(claveAvance(uid, clave)));
+    if (!a || Date.now() - a.t > AVANCE_HORAS * 3600e3) return null;
+    return a;
+  } catch { return null; }
+}
+const borrarAvance = (uid, clave) => { try { localStorage.removeItem(claveAvance(uid, clave)); } catch {} };
+// Pantalla "¿Continuar o empezar de nuevo?". Devuelve true si continúa.
+function preguntarContinuar(titulo, a, salir) {
+  return new Promise((resolver) => {
+    pintar(`
+      <a href="${salir}" class="link">← Volver</a>
+      <div class="card flash" style="margin-top:16px">
+        <div class="big">⏸ Tienes esto a medias</div>
+        <p><b>${esc(titulo)}</b></p>
+        <p class="muted">Llevas ${a.hechos} de ${a.total} completadas${a.xp ? ` y ${a.xp} XP` : ""}.</p>
+        <div class="row">
+          <button class="btn" id="av-si">▶ Continuar donde iba</button>
+          <button class="btn alt" id="av-no">🔀 Empezar de nuevo</button>
+        </div>
+        <p class="muted" style="font-size:.85rem">Si empiezas de nuevo, las preguntas salen en otro orden.</p>
+      </div>`);
+    document.getElementById("av-si").onclick = () => resolver(true);
+    document.getElementById("av-no").onclick = () => resolver(false);
+  });
+}
+
+// clave: dónde se guarda el avance (si no hay clave, no se guarda). pool: ejercicios disponibles para reconstruir lo guardado.
+// alReiniciar(): devuelve una lista NUEVA de ejercicios (otro orden u otras preguntas) cuando eligen empezar de nuevo.
+async function jugarEjercicios({ titulo, ejercicios, leccionId = null, modo = "leccion", salir = "#/ingles", alTerminar = null, episodio = null,
+  clave = null, pool = null, alReiniciar = null }) {
   const user = await usuarioActual();
   const modoErrores = modo === "errores", examen = modo === "examen";
-  const total = ejercicios.length;
-  const cola = [...ejercicios];
   const primerIntento = {};            // id → true/false
   const puntajes = {};                 // id → 0..100 (respuestas calificadas por Wako)
   const yaRepetido = new Set();
   let xp = 0, combo = 0, hechos = 0;
   let actual, estado, comprobado, reloj = null;
+  let cola;
+
+  // ¿Hay avance guardado? En exámenes se retoma siempre (no se puede reiniciar buscando otras preguntas).
+  const guardado = clave && user ? leerAvance(user.id, clave) : null;
+  const porId = Object.fromEntries([...(pool || []), ...ejercicios].map((e) => [e.id, e]));
+  const reconstruible = guardado && guardado.ids.every((id) => porId[id]) && guardado.cola.every((id) => porId[id]);
+  if (reconstruible && (examen || await preguntarContinuar(titulo, guardado, salir))) {
+    ejercicios = guardado.ids.map((id) => porId[id]);
+    cola = guardado.cola.map((id) => porId[id]);
+    Object.assign(primerIntento, guardado.primerIntento || {});
+    Object.assign(puntajes, guardado.puntajes || {});
+    (guardado.repetidos || []).forEach((id) => yaRepetido.add(id));
+    ({ xp, combo, hechos } = guardado);
+  } else {
+    if (guardado) borrarAvance(user.id, clave);
+    if (reconstruible && alReiniciar) ejercicios = await alReiniciar();
+    cola = [...ejercicios];
+  }
+  const total = ejercicios.length;
+  const guardar = (pendientes) => {
+    if (!clave || !user) return;
+    try {
+      localStorage.setItem(claveAvance(user.id, clave), JSON.stringify({
+        t: Date.now(), titulo, total, ids: ejercicios.map((e) => e.id), cola: pendientes.map((e) => e.id),
+        primerIntento, puntajes, repetidos: [...yaRepetido], xp, combo, hechos
+      }));
+    } catch {}
+  };
 
   const sig = () => {
     clearInterval(reloj);
     if (!cola.length) return final();
     actual = cola.shift();
     estado = {}; comprobado = false;
+    guardar([actual, ...cola]); // si sale ahora, al volver le sale esta misma pregunta
     pintarEjercicio();
   };
 
@@ -506,6 +570,7 @@ async function jugarEjercicios({ titulo, ejercicios, leccionId = null, modo = "l
       combo = 0;
       if (!examen && !yaRepetido.has(actual.id) && t !== "libre") { yaRepetido.add(actual.id); cola.push(actual); } else hechos++;
     }
+    guardar(cola); // respuesta guardada: al volver sigue con la próxima
     const go = document.getElementById("b-go");
     if (examen) { // en examen no se muestra la respuesta: sigue al próximo
       document.getElementById("lec-fb").innerHTML = `<div class="fb"><b>Respuesta guardada ✔</b></div>`;
@@ -531,6 +596,7 @@ async function jugarEjercicios({ titulo, ejercicios, leccionId = null, modo = "l
 
   async function final() {
     clearInterval(reloj);
+    if (clave && user) borrarAvance(user.id, clave);
     const ids = Object.keys(primerIntento);
     const bien = ids.filter((id) => primerIntento[id]).length;
     const precision = Math.round((bien / Math.max(1, total)) * 100);

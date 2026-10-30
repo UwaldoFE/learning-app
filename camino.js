@@ -33,6 +33,36 @@ const CAM = { cache: null };
 const nivelActual = () => Math.min((WK.fila?.episodios_aprobados ?? (EPISODIO_EVALUACION - 1)) + 1, NIVELES);
 const precisionReciente = (r) => (r && r.length ? [...r].filter((c) => c === "1").length / r.length : 0);
 
+// ---------- temas que Wako puede reconocer al conversar (pata output) ----------
+let temasCache = null;
+async function temasParaWako() {
+  try {
+    if (!temasCache) { const { data, error } = await db.from("pensum_temas").select("id, episodio, nombre_en, nombre_es"); if (error) return []; temasCache = data; }
+    const nivel = typeof nivelActual === "function" ? nivelActual() : 3;
+    return temasCache.filter((t) => t.episodio <= nivel).map((t) => ({ id: t.id, nombre: t.nombre_en || t.nombre_es }));
+  } catch { return []; }
+}
+// Lo que Wako detecta en la conversación suma a 🗣 Output (máx. 2 veces por tema al día desde el chat)
+const CHAT_MAX_POR_TEMA = 2;
+function registrarDesdeChat(respuesta) {
+  const bien = respuesta?.temas_bien || [], mal = respuesta?.temas_mal || [];
+  if (!bien.length && !mal.length) return [];
+  const clave = `chat-dominio-${fechaLocal()}`;
+  let cuenta = {};
+  try { cuenta = JSON.parse(localStorage.getItem(clave)) || {}; } catch {}
+  const sumados = [];
+  for (const [lista, ok] of [[bien, true], [mal, false]]) for (const id of lista) {
+    if ((cuenta[id] || 0) >= CHAT_MAX_POR_TEMA) continue;
+    cuenta[id] = (cuenta[id] || 0) + 1;
+    registrarDominio(id, "output", ok);
+    if (ok) sumados.push(id);
+  }
+  try { localStorage.setItem(clave, JSON.stringify(cuenta)); } catch {}
+  CAM.cache = null;
+  return sumados;
+}
+const nombreTema = (id) => temasCache?.find((t) => t.id === id)?.nombre_es || id;
+
 // ---------- datos: temas, ejercicios y dominio ----------
 async function caminoDatos(forzar = false) {
   if (CAM.cache && !forzar) return CAM.cache;
@@ -149,6 +179,7 @@ async function vistaCamino() {
     <p class="muted">Todavía no hay ejercicios cargados para este nivel. Mientras tanto, repasa con la práctica libre.</p></div>`);
   jugarEjercicios({
     titulo: `Mi camino · Nivel ${nivel}`, ejercicios: bloque, modo: "camino", salir: "#/", episodio: nivel,
+    clave: `camino-${nivel}`, pool: datos.ejercicios, alReiniciar: () => armarBloque(datos, nivel), // empezar de nuevo = bloque nuevo
     alTerminar: (r) => finBloque(r, nivel)
   });
 }

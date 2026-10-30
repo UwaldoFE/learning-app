@@ -116,7 +116,7 @@ function tfPintar() {
   const body = document.getElementById("tf-body");
   const burbujas = TF.mensajes.map((x) => x.role === "user"
     ? `<div class="t-yo">${x.voz ? "🎤 " : ""}${esc(x.content)}</div>`
-    : `<div class="t-ia">${x.bien && x.tras && !x.r?.nota ? `<div class="t-ok">✅ ¡Bien dicho!</div>` : ""}${htmlRespuesta(x.r || {})}</div>`).join("");
+    : `<div class="t-ia">${x.bien && x.tras && !x.r?.nota ? `<div class="t-ok">✅ ¡Bien dicho!</div>` : ""}${htmlRespuesta(x.r || {})}${x.sumo?.length ? `<div class="t-sumo">🗣 +1 en Mis temas: ${x.sumo.map((id) => esc(nombreTema(id))).join(", ")}</div>` : ""}</div>`).join("");
   body.innerHTML = burbujas || `
     <div class="tf-vacio">
       <div class="tf-hola">👋</div>
@@ -152,6 +152,7 @@ async function tfEnviar(texto, { voz = false } = {}) {
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${data.session?.access_token || ""}` },
       body: JSON.stringify({
         modo: "flotante", episodio: TF.episodio || 3, etapa: WK.estado?.etapa?.n || 3,
+        temas: typeof temasParaWako === "function" ? await temasParaWako() : [],
         contexto: `Pantalla: ${c.pantalla}${c.detalle ? "\n" + c.detalle : ""}`,
         mensajes: TF.mensajes.slice(-TF_MAX_ENVIADOS).map((x) => ({ role: x.role, content: x.role === "user" ? x.content : JSON.stringify(x.r) }))
       })
@@ -163,7 +164,8 @@ async function tfEnviar(texto, { voz = false } = {}) {
       tfError(j.codigo === "falta_sql" ? "Falta correr un archivo SQL en Supabase (mira las instrucciones)." : (j.error || "El tutor no pudo responder. Intenta de nuevo."));
       return;
     }
-    TF.mensajes.push({ role: "assistant", r: j.respuesta, bien: j.respuesta.bien, tras: true });
+    TF.mensajes.push({ role: "assistant", r: j.respuesta, bien: j.respuesta.bien, tras: true,
+      sumo: typeof registrarDesdeChat === "function" ? registrarDesdeChat(j.respuesta) : [] });
     tfCara(j.respuesta.correccion ? "feliz" : "emocionado", 2500);
     await tfGuardar();
     if (voz && j.respuesta.mensaje) { try { hablar(j.respuesta.mensaje); } catch {} }
@@ -278,6 +280,7 @@ async function tfEnviarAudio(blob) {
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${data.session?.access_token || ""}` },
       body: JSON.stringify({
         modo: "flotante", episodio: TF.episodio || 3, etapa: WK.estado?.etapa?.n || 3,
+        temas: typeof temasParaWako === "function" ? await temasParaWako() : [],
         contexto: `Pantalla: ${c.pantalla}${c.detalle ? "\n" + c.detalle : ""}`,
         mensajes: historial, audio: await aBase64(blob), tipo: blob.type
       })
@@ -286,7 +289,8 @@ async function tfEnviarAudio(blob) {
     TF.mensajes = TF.mensajes.filter((x) => x !== provisional);
     if (!r.ok) return tfError(j.error || "El tutor no pudo responder. Intenta de nuevo.");
     TF.mensajes.push({ role: "user", content: j.texto, voz: true });
-    TF.mensajes.push({ role: "assistant", r: j.respuesta, bien: j.respuesta.bien, tras: true });
+    TF.mensajes.push({ role: "assistant", r: j.respuesta, bien: j.respuesta.bien, tras: true,
+      sumo: typeof registrarDesdeChat === "function" ? registrarDesdeChat(j.respuesta) : [] });
     tfCara(j.respuesta.correccion ? "feliz" : "emocionado", 2500);
     await tfGuardar();
     if (j.respuesta.mensaje) { try { hablar(j.respuesta.mensaje); } catch {} }

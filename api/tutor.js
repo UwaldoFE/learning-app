@@ -58,7 +58,7 @@ const PERSONALIDAD = [
 ];
 const personalidad = (etapa) => (PERSONALIDAD.find(([max]) => (Number(etapa) || 1) <= max) || PERSONALIDAD[4])[1];
 
-function instrucciones({ modo, episodio, escenario, miVida, errores, contexto, etapa }) {
+function instrucciones({ modo, episodio, escenario, miVida, errores, contexto, etapa, temas }) {
   const ep = Math.min(Math.max(Number(episodio) || 3, 1), 7);
   const permitidos = Object.entries(TEMAS).filter(([n]) => Number(n) <= ep).map(([n, t]) => `Level ${n}: ${t}`).join("\n");
   return `${personalidad(etapa)} Your body is a white and blue robot with a visor screen face, an antenna with a yellow light and a battery on your chest; students charge your battery by studying. Never say you are an AI model: you are Wako, the student's study robot. You are a warm, patient English tutor for a Spanish-speaking adult from Colombia (beginner, about A1). He studies English by "levels" (Level = episode of his institute).
@@ -81,8 +81,10 @@ CORRECTION RULES:
 - Never correct more than the 2 most important mistakes.
 - Always end "mensaje" with ONE simple question so he keeps talking (except in translate mode; in helper mode only when it helps).
 
-Reply ONLY with a JSON object with exactly these keys:
-{"bien": true|false, "correccion": "", "correccion_es": "", "explicacion": "", "nota": "", "mensaje": "", "mensaje_es": ""}
+${temas.length ? `TOPICS OF HIS LEVELS (id: topic): ${temas.map((t) => `${t.id}: ${t.nombre}`).join(" | ")}
+For his LAST message only (and only if it is in English): put in "temas_bien" the ids of the topics whose grammar he actually USED CORRECTLY (a real use, e.g. "Would you like to come?" → would like; not just a single word), and in "temas_mal" the ids of the topics he tried to use but with a mistake. Use [] when none. Maximum 2 ids in each.
+` : ""}Reply ONLY with a JSON object with exactly these keys:
+{"bien": true|false, "correccion": "", "correccion_es": "", "explicacion": "", "nota": "", "mensaje": "", "mensaje_es": ""${temas.length ? ', "temas_bien": [], "temas_mal": []' : ""}}
 - "mensaje": your reply in simple English (1–3 short sentences).
 - "mensaje_es": its Spanish translation.
 - "nota": extra explanation in Spanish only when needed (class mode or end of role-play), else "".`;
@@ -132,6 +134,9 @@ module.exports = async (req, res) => {
   // 3) Contexto
   const { modo = "libre", episodio = 3, escenario = "", etapa = 3 } = req.body || {};
   const contexto = String(req.body?.contexto || "").slice(0, 1200);
+  // Temas del pénsum que Wako puede reconocer en la conversación (para el semáforo de "Mis temas")
+  const temas = (Array.isArray(req.body?.temas) ? req.body.temas : []).slice(0, 40)
+    .filter((t) => t && /^ep\d+-[a-z0-9-]+$/.test(String(t.id))).map((t) => ({ id: String(t.id), nombre: String(t.nombre || "").slice(0, 60) }));
   const miVida = String(vida.data?.[0]?.texto || "").slice(0, 1500);
   const errores = (Array.isArray(err.data) ? err.data : [])
     .map((r) => r.ejercicios?.datos?.explicacion).filter(Boolean).map((t) => String(t).slice(0, 160));
@@ -160,10 +165,13 @@ module.exports = async (req, res) => {
   if (!historial.length) historial.push({ role: "user", content: "(Start the session now.)" });
 
   try {
-    const r = await llamarOpenAI([{ role: "system", content: instrucciones({ modo, episodio, escenario, miVida, errores, contexto, etapa }) }, ...historial]);
+    const r = await llamarOpenAI([{ role: "system", content: instrucciones({ modo, episodio, escenario, miVida, errores, contexto, etapa, temas }) }, ...historial]);
     const limpio = {};
     for (const k of ["correccion", "correccion_es", "explicacion", "nota", "mensaje", "mensaje_es"]) limpio[k] = String(r[k] ?? "").trim();
     limpio.bien = r.bien !== false && !limpio.correccion;
+    const validos = new Set(temas.map((t) => t.id));
+    limpio.temas_bien = (Array.isArray(r.temas_bien) ? r.temas_bien : []).map(String).filter((x) => validos.has(x)).slice(0, 2);
+    limpio.temas_mal = (Array.isArray(r.temas_mal) ? r.temas_mal : []).map(String).filter((x) => validos.has(x) && !limpio.temas_bien.includes(x)).slice(0, 2);
     await supa(`/rest/v1/tutor_uso?on_conflict=user_id,fecha`, token, {
       method: "POST", headers: { Prefer: "resolution=merge-duplicates" },
       body: JSON.stringify(texto ? { fecha, mensajes: usados + 1, audios: audios + 1 } : { fecha, mensajes: usados + 1 })
