@@ -420,3 +420,4 @@ a.wk-card { display: flex; gap: 16px; align-items: center; }
 .tf-avatar { background: rgba(255,255,255,.9) !important; }
 .tf-sub { font-size: .75rem; font-weight: 700; opacity: .85; }
 .t-sumo { font-size: .8rem; font-weight: 800; color: var(--ok-ink); background: var(--ok-bg); border-radius: 10px; padding: 4px 8px; justify-self: start; }
+.tarjeta-voz .big { margin: 6px 0 10px; } .tarjeta-voz input { margin-top: 10px; }

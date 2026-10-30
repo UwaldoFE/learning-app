@@ -347,6 +347,7 @@ async function contarPendientes() {
   try { return (await tarjetasDeHoy()).length; } catch { return "?"; }
 }
 
+// Tarjetas: sale la frase en español y la dices en inglés (o la escribes). Si la dices bien, pasa sola a la siguiente.
 async function vistaRepaso(unidadId = null) {
   pintar(`<p class="muted">Preparando tarjetas…</p>`);
   let cola;
@@ -357,41 +358,82 @@ async function vistaRepaso(unidadId = null) {
       <div class="big">✅ Al día</div>
       <p class="muted">No tienes tarjetas pendientes ${unidadId ? "en esta unidad" : "hoy"}. ¡Vuelve mañana!</p>
     </div>`);
-  let i = 0, bien = 0, mal = 0;
+  cola = mezclar(cola);
+  let i = 0, bien = 0, mal = 0, xp = 0;
+  const inicio = Date.now();
+  // Qué se pide: la frase de ejemplo si existe (más natural para decir); si no, la palabra o expresión
+  const meta = (c) => c.ejemplo && c.traduccion
+    ? { es: c.traduccion, en: c.ejemplo, respuestas: [c.ejemplo] }
+    : { es: c.reverso, en: c.frente, respuestas: [c.frente.replace(/\s*\/\s*/g, " "), ...c.frente.split("/").map((x) => x.trim())] };
 
-  const mostrar = (volteada = false) => {
+  const mostrar = () => {
     if (i >= cola.length) {
+      try { if (typeof energiaSumarMinutos === "function") energiaSumarMinutos(Math.max(2, Math.round((Date.now() - inicio) / 60000))); } catch {}
+      try { if (xp) sumarXP(xp); } catch {}
       return pintar(`
         <a href="#/ingles" class="link">← Inglés</a>
         <div class="card flash" style="margin-top:16px">
           <div class="big">🎉 ¡Repaso terminado!</div>
-          <p class="muted">Sabías ${bien} · Por reforzar ${mal}</p>
+          <p class="muted">Dichas bien a la primera: ${bien} · Por reforzar: ${mal}${xp ? ` · +${xp} XP` : ""}</p>
           <div class="row"><a class="btn" href="#/ingles" style="text-decoration:none">Volver a Inglés</a></div>
         </div>`);
     }
-    const c = cola[i];
-    ponerContexto(`Tarjeta de repaso ${i + 1} de ${cola.length}`,
-      `Frente (inglés): ${c.frente}\nReverso (español): ${c.reverso}${c.ejemplo ? `\nEjemplo: ${c.ejemplo} = ${c.traduccion || ""}` : ""}\nEstado: ${volteada ? "ya vio la respuesta" : "aún no ve la respuesta"}`);
+    const c = cola[i], m = meta(c);
+    let intentos = 0;
+    ponerContexto(`Tarjeta de repaso ${i + 1} de ${cola.length} (debe DECIR la frase en inglés)`,
+      `Frase en español: ${m.es}\nRespuesta: ${m.en}\nEstado: aún no responde (dale una pista, no la respuesta, salvo que la pida).`);
     pintar(`
       <a href="#/ingles" class="link">← Inglés</a>
       <div class="stats muted"><span>Tarjeta ${i + 1} de ${cola.length}</span><span>✅ ${bien}</span><span>🔁 ${mal}</span></div>
-      <div class="card flash">
-        <div class="sec">${esc(c.tema)}</div>
-        <div class="big">${fraseTocable(c.frente)} ${btnVoz(c.frente)}</div>
-        ${volteada ? `
-          <div style="font-size:1.2rem">${esc(c.reverso)}</div>
-          ${c.ejemplo ? `<div class="practica"><b>${fraseTocable(c.ejemplo)}</b> ${btnVoz(c.ejemplo)}<br><span class="muted">${esc(c.traduccion)}</span></div>` : ""}
-          <div class="row">
-            <button class="btn bad" id="b-no">No lo sabía</button>
-            <button class="btn" id="b-si">Lo sabía</button>
-          </div>`
-        : `<div class="row"><button class="btn alt" id="b-ver">Ver respuesta</button></div>`}
+      <div class="card flash tarjeta-voz">
+        <div class="sec">${esc(c.tema || "")}</div>
+        <div class="muted">🗣 Dilo en inglés:</div>
+        <div class="big">${esc(m.es)}</div>
+        <div id="tj-zona">
+          <div class="row"><button class="btn mic-grande" id="tj-mic">🎤 Toca y dilo</button></div>
+          <div class="row" style="margin-top:6px">
+            <button class="link" id="tj-tec">⌨️ Escribirlo</button>
+            <button class="link" id="tj-ver">🙈 No sé, ver respuesta</button>
+          </div>
+          <input type="text" id="tj-in" hidden autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Escríbelo en inglés y presiona Enter">
+        </div>
+        <p class="error" id="tj-err"></p>
+        <div id="tj-fb"></div>
       </div>`);
-    if (!volteada) document.getElementById("b-ver").onclick = () => mostrar(true);
-    else {
-      document.getElementById("b-si").onclick = () => responder(c, true);
-      document.getElementById("b-no").onclick = () => responder(c, false);
-    }
+    const err = (t) => (document.getElementById("tj-err").textContent = t || "");
+    const fb = document.getElementById("tj-fb");
+    const respuestaHtml = () => `<div class="practica"><b>${fraseTocable(m.en)}</b> ${btnVoz(m.en)}${c.ejemplo && m.en !== c.frente ? `<div class="muted">${esc(c.frente)} = ${esc(c.reverso)}</div>` : ""}</div>`;
+    const siguiente = (acerto) => responder(c, acerto);
+    const fallar = (dicho) => {
+      intentos++;
+      fb.innerHTML = `
+        <div class="fb fb-mal">
+          <b>${dicho ? "Casi. Se dice así:" : "Se dice así:"}</b>
+          ${dicho ? `<div class="muted">Dijiste: ${esc(dicho)}</div>` : ""}
+          ${respuestaHtml()}
+          <div class="row"><button class="btn alt" id="tj-otra">🔁 Intentar otra vez</button><button class="btn" id="tj-sig">Siguiente →</button></div>
+        </div>`;
+      try { hablar(m.en); } catch {}
+      document.getElementById("tj-otra").onclick = () => { fb.innerHTML = ""; err(""); };
+      document.getElementById("tj-sig").onclick = () => siguiente(false);
+    };
+    const revisar = (dicho) => {
+      err("");
+      const r = parecido(dicho, m.respuestas);
+      if (!r.ok) return fallar(dicho);
+      const primera = intentos === 0;
+      if (primera) xp += 2;
+      fb.innerHTML = `<div class="fb fb-ok"><b>✅ ¡Bien dicho!${r.casi ? " (casi perfecto)" : ""}</b>${respuestaHtml()}</div>`;
+      document.getElementById("tj-zona").hidden = true;
+      try { hablar(m.en); } catch {}
+      setTimeout(() => siguiente(primera), 1700); // pasa sola a la siguiente
+    };
+    const mic = document.getElementById("tj-mic");
+    mic.onclick = () => grabarVoz(mic, revisar, err);
+    const inp = document.getElementById("tj-in");
+    document.getElementById("tj-tec").onclick = (e) => { inp.hidden = false; inp.focus(); e.target.hidden = true; };
+    inp.onkeydown = (e) => { if (e.key === "Enter" && inp.value.trim()) { revisar(inp.value); inp.value = ""; } };
+    document.getElementById("tj-ver").onclick = () => fallar("");
   };
 
   const responder = async (c, acerto) => {

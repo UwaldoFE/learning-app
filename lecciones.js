@@ -169,7 +169,12 @@ function confeti() {
 
 // ---------- utilidades de voz para ejercicios ----------
 // Compara lo dicho en voz (o escrito) sin importar mayúsculas, puntuación ni "50,000" vs "50000"
-const normalizarVoz = (s) => normalizar(String(s).replace(/(\d)[,.](\d)/g, "$1$2"));
+const CONTRACCIONES = { im: "i am", youre: "you are", hes: "he is", shes: "she is", its: "it is", were: "we are", theyre: "they are",
+  isnt: "is not", arent: "are not", dont: "do not", doesnt: "does not", cant: "can not", cannot: "can not", id: "i would",
+  whats: "what is", thats: "that is", theres: "there is", wont: "will not", didnt: "did not", ill: "i will", ive: "i have" };
+// Se aplica igual a lo dicho y a la respuesta, así "They're" y "They are" cuentan igual
+const normalizarVoz = (s) => normalizar(String(s).replace(/(\d)[,.](\d)/g, "$1$2"))
+  .split(" ").map((w) => CONTRACCIONES[w] || w).join(" ");
 function parecido(dicho, respuestas) {
   const v = normalizarVoz(dicho);
   if (!v) return { ok: false, casi: false };
