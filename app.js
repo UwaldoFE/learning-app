@@ -311,17 +311,41 @@ async function tarjetasDeHoy(unidadId = null) {
 // 🔊 Pronunciación con la voz del navegador (gratis, sin internet extra)
 // velocidad: 0.9 normal · 0.55 lenta (🐢) · 0.75 palabra suelta
 const VEL = { normal: 0.9, lenta: 0.55, palabra: 0.75 };
+// En iPhone/iPad la voz casi no cambia de velocidad, por eso el modo lento se hace
+// diciendo la frase en trozos de 1–2 palabras con pausas entre ellos (se nota en cualquier celular).
+const ES_IOS = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+const vozIngles = () => speechSynthesis.getVoices().find((v) => v.lang === "en-US") || speechSynthesis.getVoices().find((v) => v.lang?.startsWith("en"));
+const limpiarVoz = (t) => String(t).replace(/[→/]/g, ", ").replace(/[—…]/g, " ").replace(/_+/g, " ").replace(/["“”]/g, "").replace(/\s+/g, " ").trim();
+// Divide en trozos cortos: palabras sueltas, pero junta palabras muy cortas ("a", "the", "to") con la siguiente
+function trozosLentos(texto) {
+  const palabras = limpiarVoz(texto).split(" ").filter(Boolean), trozos = [];
+  for (let k = 0; k < palabras.length; k++) {
+    const w = palabras[k];
+    if (w.replace(/[^a-z']/gi, "").length <= 3 && k < palabras.length - 1 && !/[,.?!]$/.test(w)) { trozos.push(w + " " + palabras[++k]); }
+    else trozos.push(w);
+  }
+  return trozos;
+}
+function utter(texto, rate) {
+  const u = new SpeechSynthesisUtterance(texto);
+  u.lang = "en-US"; u.rate = rate;
+  const v = vozIngles(); if (v) u.voice = v;
+  return u;
+}
+// Encola el texto: normal = de corrido; lento = trozo por trozo, más despacio. Devuelve la lista de "utterances".
+function encolarVoz(texto, lento) {
+  const limpio = limpiarVoz(texto);
+  if (!limpio) return [];
+  const lista = lento ? trozosLentos(limpio).map((t) => utter(t, ES_IOS ? 0.7 : 0.6)) : [utter(limpio, VEL.normal)];
+  lista.forEach((u) => speechSynthesis.speak(u));
+  return lista;
+}
 function hablar(texto, rate = VEL.normal) {
   if (!("speechSynthesis" in window)) return alert("Tu navegador no tiene voz disponible.");
-  const limpio = String(texto).replace(/[→/]/g, ", ").replace(/[—…]/g, " ").replace(/_+/g, " ").replace(/\s+/g, " ").trim();
-  if (!limpio) return;
   speechSynthesis.cancel();
-  const voz = new SpeechSynthesisUtterance(limpio);
-  voz.lang = "en-US";
-  voz.rate = rate;
-  const ingles = speechSynthesis.getVoices().find((v) => v.lang?.startsWith("en"));
-  if (ingles) voz.voice = ingles;
-  speechSynthesis.speak(voz);
+  if (rate === VEL.lenta) return encolarVoz(texto, true);
+  const u = utter(limpiarVoz(texto), rate);
+  if (u.text) speechSynthesis.speak(u);
 }
 // Botones 🔊 normal + 🐢 lento
 const btnVoz = (texto) =>

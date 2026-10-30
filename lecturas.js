@@ -197,14 +197,12 @@ async function sumarXP(xp) {
 function leerEnCola(lineas, rate, alMarcar) {
   if (!("speechSynthesis" in window)) return alert("Tu navegador no tiene voz disponible.");
   speechSynthesis.cancel();
-  const ingles = speechSynthesis.getVoices().find((v) => v.lang?.startsWith("en"));
+  const lento = rate === VEL.lenta;
   lineas.forEach((l, i) => {
-    const u = new SpeechSynthesisUtterance(l.en.replace(/["“”]/g, ""));
-    u.lang = "en-US"; u.rate = rate;
-    if (ingles) u.voice = ingles;
-    u.onstart = () => alMarcar(i);
-    if (i === lineas.length - 1) u.onend = () => alMarcar(-1);
-    speechSynthesis.speak(u);
+    const partes = encolarVoz(l.en, lento); // lento: trozo por trozo, con pausas
+    if (!partes.length) return;
+    partes[0].onstart = () => alMarcar(i);
+    if (i === lineas.length - 1) partes[partes.length - 1].onend = () => alMarcar(-1);
   });
 }
 
