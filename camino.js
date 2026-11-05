@@ -14,7 +14,18 @@ const UNIDADES = {
   2: [{ n: 3, nombre: "An Airplane", temas: ["ep2-presente-s", "ep2-do-does", "ep2-rutinas", "ep2-plurales", "ep2-this-that", "ep2-the"] },
       { n: 4, nombre: "At the Airport", temas: ["ep2-numeros", "ep2-hora"] }],
   3: [{ n: 5, nombre: "Informal Telephone Call", temas: ["ep3-would-like", "ep3-can-could", "ep3-may-might", "ep3-conectores"] },
-      { n: 6, nombre: "Taking a Taxi", temas: ["ep3-question-words", "ep3-whose"] }]
+      { n: 6, nombre: "Taking a Taxi", temas: ["ep3-question-words", "ep3-whose"] }],
+  4: [{ n: 7, nombre: "At the Hotel", temas: ["ep4-pasado-regular", "ep4-was-were", "ep4-did", "ep4-used-to"] },
+      { n: 8, nombre: "A Formal Telephone Call", temas: ["ep4-pasado-irregular", "ep4-pasado-progresivo", "ep4-speak-talk", "ep4-dias"] }],
+  5: [{ n: 9, nombre: "At Work", temas: ["ep5-both-either-neither", "ep5-neither-nor", "ep5-negativas", "ep5-pronombres-objeto", "ep5-oficina"] },
+      { n: 10, nombre: "Review", temas: ["ep5-there-is", "ep5-how", "ep5-have-got"] }],
+  6: [{ n: 11, nombre: "Making Reservations", temas: ["ep6-contables", "ep6-some-any", "ep6-cuantificadores", "ep6-too-enough", "ep6-comida"] },
+      { n: 12, nombre: "Remembering", temas: ["ep6-meses-fechas", "ep6-frecuencia", "ep6-something"] }],
+  7: [{ n: 13, nombre: "A Bar", temas: ["ep7-preposiciones", "ep7-posesivo-s", "ep7-bebidas"] },
+      { n: 14, nombre: "An Explanation", temas: ["ep7-pronombres-posesivos", "ep7-adverbios"] },
+      { n: 15, nombre: "Review", temas: ["ep7-tag-questions", "ep7-preguntas-negativas"] }],
+  8: [{ n: 16, nombre: "Renting a Car", temas: ["ep8-will", "ep8-going-to", "ep8-shall", "ep8-carro"] },
+      { n: 17, nombre: "Memories", temas: ["ep8-presente-perfecto", "ep8-just-already-yet", "ep8-ropa"] }]
 };
 
 // Cuánto hay que demostrar en cada pata para que un tema quede dominado

@@ -149,6 +149,106 @@ const LECTURAS = [
       { tema: "ep3-whose", q: "Complete: \"___ phone is this?\"", es: "¿De quién es este teléfono?", opciones: ["Who", "Whose", "Where"], correcta: 1, ex: "Para preguntar el dueño: Whose + cosa + is this?" },
       { tema: "ep2-hora", q: "\"A quarter to ten\" is…", es: "\"A quarter to ten\" es…", opciones: ["10:15", "9:45", "10:45"], correcta: 1, ex: "\"to\" = para / menos: un cuarto para las diez = 9:45. \"past\" = y: a quarter past ten = 10:15." }
     ]
+  },
+  {
+    id: "ep4-a-night-at-the-hotel", episodio: 4, titulo: "A Night at the Hotel", es: "Una noche en el hotel",
+    tema: "pasado regular e irregular, was/were, pasado progresivo y used to",
+    lineas: [
+      { en: "Last Friday, Uwaldo and Maria traveled to Bogotá for a shoe fair.", es: "El viernes pasado, Uwaldo y María viajaron a Bogotá a una feria de calzado." },
+      { en: "They arrived at the hotel at ten o'clock at night.", es: "Llegaron al hotel a las diez de la noche." },
+      { en: "The receptionist was very kind, but their room wasn't ready.", es: "La recepcionista fue muy amable, pero su habitación no estaba lista." },
+      { en: "While they were waiting, they had a coffee in the lobby.", es: "Mientras esperaban, se tomaron un café en el lobby." },
+      { en: "The room was small, but it was clean and quiet.", es: "La habitación era pequeña, pero estaba limpia y tranquila." },
+      { en: "Maria didn't sleep well. She isn't used to the cold weather of Bogotá.", es: "María no durmió bien. No está acostumbrada al clima frío de Bogotá." },
+      { en: "Uwaldo used to live in Bogotá, so he slept like a baby.", es: "Uwaldo antes vivía en Bogotá, así que durmió como un bebé." },
+      { en: "In the morning, they went to the fair and bought new models for Alzati.", es: "En la mañana fueron a la feria y compraron modelos nuevos para Alzati." }
+    ],
+    preguntas: [
+      { tema: "ep4-dias", q: "When did they travel to Bogotá?", es: "¿Cuándo viajaron a Bogotá?", opciones: ["Last Sunday.", "Two weeks ago.", "Last Friday."], correcta: 2, ex: "\"Last Friday\" = el viernes pasado." },
+      { tema: "ep4-pasado-progresivo", q: "What did they do while they were waiting?", es: "¿Qué hicieron mientras esperaban?", opciones: ["They had a coffee.", "They slept.", "They went to the fair."], correcta: 0, ex: "While they were waiting, they had a coffee." },
+      { tema: "ep4-used-to", q: "Why did Uwaldo sleep well?", es: "¿Por qué Uwaldo durmió bien?", opciones: ["He drank a coffee.", "The room was big.", "He used to live in Bogotá."], correcta: 2, ex: "used to live = antes vivía." },
+      { tema: "ep4-pasado-irregular", q: "What did they buy?", es: "¿Qué compraron?", opciones: ["New models for Alzati.", "A new hotel room.", "Coffee for the store."], correcta: 0, ex: "bought = compraron (buy → bought)." }
+    ]
+  },
+  {
+    id: "ep5-monday-at-the-office", episodio: 5, titulo: "Monday at the Office", es: "Lunes en la oficina",
+    tema: "both/either/neither, palabras negativas, there is/are, how much/many y have got",
+    lineas: [
+      { en: "On Monday morning, there are many messages on Uwaldo's laptop.", es: "El lunes en la mañana hay muchos mensajes en el portátil de Uwaldo." },
+      { en: "Two suppliers want to sell him sneakers. Both of them have got good prices.", es: "Dos proveedores le quieren vender tenis. Los dos tienen buenos precios." },
+      { en: "\"How many pairs can you send?\" he asks. \"And how long does the shipping take?\"", es: "\"¿Cuántos pares pueden enviar?\", pregunta. \"¿Y cuánto se demora el envío?\"" },
+      { en: "The first supplier doesn't answer. Nobody answers the phone at his office.", es: "El primer proveedor no responde. Nadie contesta el teléfono en su oficina." },
+      { en: "The second one says: \"You can pay either by transfer or in cash.\"", es: "El segundo dice: \"Puede pagar o por transferencia o en efectivo.\"" },
+      { en: "Maria looks at the photos. \"I like neither the red ones nor the green ones,\" she says.", es: "María mira las fotos. \"No me gustan ni los rojos ni los verdes\", dice." },
+      { en: "\"Me neither,\" says Uwaldo. \"But the black ones are great.\"", es: "\"A mí tampoco\", dice Uwaldo. \"Pero los negros están geniales.\"" },
+      { en: "In the end, they order fifty pairs of black sneakers.", es: "Al final, piden cincuenta pares de tenis negros." }
+    ],
+    preguntas: [
+      { tema: "ep5-both-either-neither", q: "What have both suppliers got?", es: "¿Qué tienen los dos proveedores?", opciones: ["A big office.", "Good prices.", "Black sneakers."], correcta: 1, ex: "Both of them have got good prices." },
+      { tema: "ep5-negativas", q: "Who answers the phone at the first supplier's office?", es: "¿Quién contesta en la oficina del primer proveedor?", opciones: ["The supplier.", "Nobody.", "Maria."], correcta: 1, ex: "Nobody answers the phone." },
+      { tema: "ep5-neither-nor", q: "Does Maria like the red sneakers?", es: "¿A María le gustan los tenis rojos?", opciones: ["Yes, she likes both.", "Yes, but not the black ones.", "No, she likes neither the red nor the green ones."], correcta: 2, ex: "neither… nor = ni… ni." },
+      { tema: "ep5-how", q: "How many pairs do they order?", es: "¿Cuántos pares piden?", opciones: ["Fifty.", "Fifteen.", "Five."], correcta: 0, ex: "fifty pairs = cincuenta pares." }
+    ]
+  },
+  {
+    id: "ep6-a-table-for-four", episodio: 6, titulo: "A Table for Four", es: "Una mesa para cuatro",
+    tema: "reservas, some/any, cuantificadores, too/enough, fechas y adverbios de frecuencia",
+    lineas: [
+      { en: "On March 14th, Uwaldo calls a restaurant. It's Maria's birthday.", es: "El 14 de marzo, Uwaldo llama a un restaurante. Es el cumpleaños de María." },
+      { en: "\"I'd like to book a table for four at eight o'clock, please.\"", es: "\"Quisiera reservar una mesa para cuatro a las ocho, por favor.\"" },
+      { en: "\"Sorry, we don't have any tables at eight. We have some at nine.\"", es: "\"Lo siento, no tenemos mesas a las ocho. Tenemos algunas a las nueve.\"" },
+      { en: "Nine is too late for their daughter, so they choose another restaurant.", es: "Las nueve es demasiado tarde para su hija, así que eligen otro restaurante." },
+      { en: "They usually go to a small Italian place, and they always order pasta.", es: "Normalmente van a un lugar italiano pequeño y siempre piden pasta." },
+      { en: "This time the pasta isn't hot enough, and there's too much salt in the salad.", es: "Esta vez la pasta no está lo suficientemente caliente y la ensalada tiene demasiada sal." },
+      { en: "The waiter brings them something new: a little chocolate cake with a candle.", es: "El mesero les trae algo nuevo: un pequeño pastel de chocolate con una vela." },
+      { en: "Maria is very happy. It's her best birthday in many years.", es: "María está muy feliz. Es su mejor cumpleaños en muchos años." }
+    ],
+    preguntas: [
+      { tema: "ep6-meses-fechas", q: "When is Maria's birthday?", es: "¿Cuándo es el cumpleaños de María?", opciones: ["On March 14th.", "On May 14th.", "On March 4th."], correcta: 0, ex: "March 14th = 14 de marzo." },
+      { tema: "ep6-too-enough", q: "Why don't they go at nine?", es: "¿Por qué no van a las nueve?", opciones: ["It's too expensive.", "There aren't any tables.", "It's too late for their daughter."], correcta: 2, ex: "too late = demasiado tarde." },
+      { tema: "ep6-frecuencia", q: "What do they always order?", es: "¿Qué piden siempre?", opciones: ["Pasta.", "Chocolate cake.", "Salad."], correcta: 0, ex: "they always order pasta." },
+      { tema: "ep6-cuantificadores", q: "What was wrong with the salad?", es: "¿Qué tenía de malo la ensalada?", opciones: ["It wasn't hot enough.", "There was too much salt.", "There wasn't any salad."], correcta: 1, ex: "too much salt = demasiada sal." }
+    ]
+  },
+  {
+    id: "ep7-at-the-bar", episodio: 7, titulo: "Friday at the Bar", es: "Viernes en el bar",
+    tema: "preposiciones, 's, posesivos, adverbios, tag questions y preguntas negativas",
+    lineas: [
+      { en: "On Friday night, Uwaldo meets his old friend Andrés at a bar on Fifth Avenue.", es: "El viernes en la noche, Uwaldo se encuentra con su viejo amigo Andrés en un bar de la Quinta Avenida." },
+      { en: "\"You're still in the police, aren't you?\" asks Uwaldo.", es: "\"Sigues en la policía, ¿cierto?\", pregunta Uwaldo." },
+      { en: "\"Yes, I am. And you sell shoes now, don't you?\"", es: "\"Sí. Y tú ahora vendes zapatos, ¿verdad?\"" },
+      { en: "Uwaldo shows him a photo of his wife's store. \"It isn't mine,\" he laughs. \"It's ours.\"", es: "Uwaldo le muestra una foto de la tienda de su esposa. \"No es mía\", se ríe. \"Es nuestra.\"" },
+      { en: "Andrés orders a beer and Uwaldo has a lemonade. He drives carefully at night.", es: "Andrés pide una cerveza y Uwaldo una limonada. Él maneja con cuidado de noche." },
+      { en: "\"Don't you miss the old job?\" asks Andrés.", es: "\"¿No extrañas el trabajo de antes?\", pregunta Andrés." },
+      { en: "\"Sometimes. But now I work hard for my family, and I'm learning English quickly.\"", es: "\"A veces. Pero ahora trabajo duro por mi familia y estoy aprendiendo inglés rápido.\"" },
+      { en: "They talk happily until eleven, and then Uwaldo goes home by car.", es: "Hablan felices hasta las once y luego Uwaldo se va a casa en carro." }
+    ],
+    preguntas: [
+      { tema: "ep7-preposiciones", q: "Where is the bar?", es: "¿Dónde queda el bar?", opciones: ["At the police station.", "In the store.", "On Fifth Avenue."], correcta: 2, ex: "on Fifth Avenue." },
+      { tema: "ep7-pronombres-posesivos", q: "Whose store is it?", es: "¿De quién es la tienda?", opciones: ["It's only Uwaldo's.", "It's Andrés's.", "It's theirs: Uwaldo's and his wife's."], correcta: 2, ex: "\"It isn't mine. It's ours.\"" },
+      { tema: "ep7-adverbios", q: "How does Uwaldo drive at night?", es: "¿Cómo maneja Uwaldo de noche?", opciones: ["Badly.", "Fast.", "Carefully."], correcta: 2, ex: "He drives carefully." },
+      { tema: "ep7-tag-questions", q: "\"You sell shoes now, ___?\"", es: "\"Ahora vendes zapatos, ¿verdad?\"", opciones: ["don't you", "do you", "aren't you"], correcta: 0, ex: "Presente afirmativo → don't you?" }
+    ]
+  },
+  {
+    id: "ep8-memories", episodio: 8, titulo: "Old Memories", es: "Viejos recuerdos",
+    tema: "presente perfecto, just/already/yet, futuro con will y going to, ropa y carros",
+    lineas: [
+      { en: "Uwaldo has just found an old photo album in a box.", es: "Uwaldo acaba de encontrar un viejo álbum de fotos en una caja." },
+      { en: "In one photo he is wearing his police uniform and a black hat.", es: "En una foto lleva su uniforme de policía y una gorra negra." },
+      { en: "\"I've had many jobs, but I've never had my own business before,\" he says.", es: "\"He tenido muchos trabajos, pero nunca antes había tenido mi propio negocio\", dice." },
+      { en: "Maria has already looked at the album. She laughs at his old jeans.", es: "María ya miró el álbum. Se ríe de sus jeans viejos." },
+      { en: "\"Have you shown it to our daughter yet?\" she asks. \"Not yet,\" he says.", es: "\"¿Ya se lo mostraste a nuestra hija?\", pregunta. \"Todavía no\", dice él." },
+      { en: "Next month they are going to rent a car and drive to his hometown.", es: "El próximo mes van a alquilar un carro e ir a su pueblo natal." },
+      { en: "\"I'll show you the house where I grew up,\" Uwaldo promises.", es: "\"Te mostraré la casa donde crecí\", promete Uwaldo." },
+      { en: "\"Shall we take the album with us?\" asks Maria. \"Great idea!\"", es: "\"¿Llevamos el álbum?\", pregunta María. \"¡Gran idea!\"" }
+    ],
+    preguntas: [
+      { tema: "ep8-just-already-yet", q: "Has their daughter seen the album?", es: "¿Su hija ya vio el álbum?", opciones: ["Yes, already.", "Not yet.", "She has just seen it."], correcta: 1, ex: "\"Not yet\" = todavía no." },
+      { tema: "ep8-ropa", q: "What is Uwaldo wearing in the photo?", es: "¿Qué lleva Uwaldo en la foto?", opciones: ["A suit and a tie.", "His police uniform and a black hat.", "A raincoat."], correcta: 1, ex: "he is wearing his police uniform and a black hat." },
+      { tema: "ep8-going-to", q: "What are they going to do next month?", es: "¿Qué van a hacer el próximo mes?", opciones: ["Rent a car and drive to his hometown.", "Sell the album.", "Buy a new house."], correcta: 0, ex: "they are going to rent a car." },
+      { tema: "ep8-presente-perfecto", q: "What has Uwaldo never had before?", es: "¿Qué nunca había tenido Uwaldo?", opciones: ["His own business.", "A job.", "A photo album."], correcta: 0, ex: "I've never had my own business before." }
+    ]
   }
 ];
 
