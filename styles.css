@@ -439,3 +439,23 @@ a.wk-card { display: flex; gap: 16px; align-items: center; }
 .mi-palabra { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; padding: 10px 0; border-bottom: 2px solid var(--line); }
 .mi-palabra:last-child { border-bottom: 0; }
 .mi-palabra-frase { font-size: .85rem; font-style: italic; }
+
+/* ---------- parejas de 7 y dibujos ---------- */
+.pares-grande { gap: 8px; }
+.pares-grande > div { gap: 8px; }
+.pares-grande .opcion { padding: 10px 12px; font-size: .98rem; text-align: center; min-height: 48px; }
+.opcion.par.acierto { border-color: var(--green); background: var(--ok-bg); color: var(--ok-ink); box-shadow: 0 4px 0 var(--green); }
+.opcion.par.hecha { opacity: .25; }
+.dibujo-caja { display: flex; justify-content: center; margin: 8px 0 4px; }
+.dibujo.grande { width: min(210px, 56vw); height: auto; animation: subir .25s ease-out; }
+.pista-dibujo { text-align: center; margin-top: 4px; }
+
+/* ---------- parejas de 7 y dibujos ---------- */
+.pares-grande { gap: 8px; }
+.pares-grande > div { gap: 8px; }
+.pares-grande .opcion { padding: 10px 12px; font-size: .98rem; text-align: center; min-height: 48px; }
+.opcion.par.acierto { border-color: var(--green); background: var(--ok-bg); color: var(--ok-ink); box-shadow: 0 4px 0 var(--green); }
+.opcion.par.hecha { opacity: .25; }
+.dibujo-caja { display: flex; justify-content: center; margin: 8px 0 4px; }
+.dibujo.grande { width: min(210px, 56vw); height: auto; animation: subir .25s ease-out; }
+.pista-dibujo { text-align: center; margin-top: 4px; }

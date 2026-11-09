@@ -145,13 +145,14 @@ function htmlLeccionesDe(episodio, d) {
       <div><b>🧪 Vista previa: las 4 patas</b> <span class="pill">nuevo</span></div>
       <div class="muted">12 ejercicios mezclados: escuchar, leer, decir en voz alta, escribir libre y ronda rápida.</div></a>` : "";
   const icono = { refuerzo: "🔧", tema: "📘", simulacro: "📝" };
+  const iconoDe = (x) => (String(x.id).startsWith("vocab-") ? "🧩" : icono[x.tipo] || "📘");
   return `<div class="lecciones">${vista}${ls.map((x) => {
     const m = d.mias[x.id];
     const estado = !m ? "" : m.mejor_precision >= 80 ? `<span class="pill ok">✓ ${m.mejor_precision}%</span>`
       : `<span class="pill">${m.mejor_precision}%</span>`;
     return `
       <a class="card leccion ${d.siguiente?.id === x.id ? "actual" : ""}" href="#/ingles/leccion/${x.id}">
-        <div><b>${icono[x.tipo] || "📘"} ${esc(x.titulo)}</b> ${estado}</div>
+        <div><b>${iconoDe(x)} ${esc(x.titulo)}</b> ${estado}</div>
         <div class="muted">${esc(x.descripcion || "")}</div>
       </a>`;
   }).join("")}</div>`;
@@ -357,7 +358,7 @@ async function jugarEjercicios({ titulo, ejercicios, leccionId = null, modo = "l
 
   const etiquetas = { elegir: "Elige la correcta", escuchar: "Escucha y elige", ordenar: "Ordena la frase",
     escribir: "Escríbelo en inglés", emparejar: "Une cada pareja", decir: "🗣 Dilo en voz alta",
-    libre: "✍️ Con tus palabras (lo califica Wako)", rapido: "⚡ Ronda rápida" };
+    libre: "✍️ Con tus palabras (lo califica Wako)", rapido: "⚡ Ronda rápida", dibujo: "🖼 Mira el dibujo y dilo en inglés" };
   const etiquetaPata = { estudio: "📘 Estudio", input: "📖 Input", output: "🗣 Output", fluidez: "⚡ Fluidez" };
   const opcionesHtml = (d) => `<div class="opciones">${d.opciones.map((o, i) => `<button class="opcion" data-op="${i}">${esc(o)}</button>`).join("")}</div>`;
   const lineasHtml = (d, conEs) => d.lineas.map((l) => `<div class="lect-linea">${fraseTocable(l.en)}${conEs ? `<div class="muted lect-es">${esc(l.es)}</div>` : ""}</div>`).join("");
@@ -389,6 +390,14 @@ async function jugarEjercicios({ titulo, ejercicios, leccionId = null, modo = "l
         <div id="dicho" class="dicho"></div>
         <div style="text-align:center"><button class="link" id="b-teclado">⌨️ No puedo hablar ahora: lo escribo</button></div>
         <input type="text" id="resp" hidden autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Escríbelo en inglés…">`;
+    } else if (t === "dibujo") {
+      cuerpo = `<div class="dibujo-caja">${dibujoSVG(d.dibujo, "dibujo grande")}</div>
+        ${examen ? "" : `<div style="text-align:center"><button class="link" id="b-pista">💡 Pista</button></div>
+        <div id="pista" class="muted pista-dibujo" hidden>🇪🇸 ${esc(d.es)} · empieza por <b>${esc(String(d.mostrar).charAt(0))}</b>…</div>`}
+        <div class="row"><button class="btn mic-grande" id="b-mic">🎤 Toca y dilo en inglés</button></div>
+        <div id="dicho" class="dicho"></div>
+        <div style="text-align:center"><button class="link" id="b-teclado">⌨️ No puedo hablar ahora: lo escribo</button></div>
+        <input type="text" id="resp" hidden autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Escríbelo en inglés…">`;
     } else if (t === "libre") {
       cuerpo = `<div class="lec-frase">${fraseTocable(d.pregunta)}</div><div class="muted">🇪🇸 ${esc(d.pregunta_es)}</div>
         <textarea id="resp" rows="3" placeholder="Escribe en inglés… o toca 🎤 y dilo"></textarea>
@@ -407,7 +416,8 @@ async function jugarEjercicios({ titulo, ejercicios, leccionId = null, modo = "l
     } else if (t === "emparejar") {
       const izq = mezclar(d.pares.map((p) => p[0])), der = mezclar(d.pares.map((p) => p[1]));
       estado.hechos = 0; estado.fallos = 0;
-      cuerpo = `<div class="pares">
+      cuerpo = `${d.titulo ? `<div class="muted">${esc(d.titulo)} · toca una palabra y luego su pareja</div>` : ""}
+        <div class="pares ${d.pares.length > 4 ? "pares-grande" : ""}">
         <div>${izq.map((x) => `<button class="opcion par" data-l="${esc(x)}">${esc(x)}</button>`).join("")}</div>
         <div>${der.map((x) => `<button class="opcion par" data-r="${esc(x)}">${esc(x)}</button>`).join("")}</div></div>`;
     }
@@ -452,15 +462,19 @@ async function jugarEjercicios({ titulo, ejercicios, leccionId = null, modo = "l
           if (quedan <= 0) { clearInterval(reloj); estado.sel = -1; comprobar(); }
         }, 100);
       }
-    } else if (t === "decir" || t === "libre") {
-      const mic = document.getElementById("b-mic"), inp = document.getElementById("resp");
+    } else if (t === "decir" || t === "libre" || t === "dibujo") {
+      const mic = document.getElementById("b-mic"), inp = document.getElementById("resp"), hablado = t !== "libre";
       mic.onclick = () => grabarVoz(mic, (texto) => {
         err("");
-        if (t === "decir") { estado.dicho = texto; document.getElementById("dicho").innerHTML = `Dijiste: <b>${esc(texto)}</b>`; }
-        else { inp.value = (inp.value ? inp.value + " " : "") + texto; }
+        if (hablado) {
+          estado.dicho = texto; document.getElementById("dicho").innerHTML = `Dijiste: <b>${esc(texto)}</b>`;
+          if (t === "dibujo") comprobar(); // en el dibujo, al terminar de hablar se califica solo
+        } else { inp.value = (inp.value ? inp.value + " " : "") + texto; }
       }, err);
-      if (t === "decir") document.getElementById("b-teclado").onclick = (e) => { inp.hidden = false; inp.focus(); e.target.hidden = true; };
-      if (inp && t === "decir") inp.onkeydown = (e) => { if (e.key === "Enter") go.click(); };
+      if (hablado) document.getElementById("b-teclado").onclick = (e) => { inp.hidden = false; inp.focus(); e.target.hidden = true; };
+      if (inp && hablado) inp.onkeydown = (e) => { if (e.key === "Enter") go.click(); };
+      const bp = document.getElementById("b-pista");
+      if (bp) bp.onclick = () => { document.getElementById("pista").hidden = false; bp.hidden = true; estado.pista = true; };
     } else if (t === "ordenar") {
       const linea = document.getElementById("linea");
       app.querySelectorAll("[data-f]").forEach((b) => (b.onclick = () => {
@@ -483,22 +497,32 @@ async function jugarEjercicios({ titulo, ejercicios, leccionId = null, modo = "l
       inp.oninput = () => err("");
       inp.onkeydown = (e) => { if (e.key === "Enter") go.click(); };
     } else if (t === "emparejar") {
-      let izq = null;
-      app.querySelectorAll("[data-l]").forEach((b) => (b.onclick = () => {
-        app.querySelectorAll("[data-l]").forEach((x) => x.classList.remove("sel"));
-        b.classList.add("sel"); izq = b; decir(b.dataset.l);
-      }));
-      app.querySelectorAll("[data-r]").forEach((b) => (b.onclick = () => {
-        if (!izq) return err("Primero toca una palabra de la izquierda.");
+      // Se puede empezar por cualquier lado: toca una palabra y luego su pareja del otro lado
+      let sel = null;
+      const esIngles = (x) => /^[A-Za-z' -]+$/.test(x) && typeof buscarEnDiccionario === "function" && !!buscarEnDiccionario(x.split(" ").pop());
+      const tocar = (b, lado) => {
+        if (comprobado || b.classList.contains("hecha")) return;
         err("");
-        const ok = d.pares.some((p) => p[0] === izq.dataset.l && p[1] === b.dataset.r);
-        if (ok) {
-          izq.classList.add("hecha"); b.classList.add("hecha"); izq.classList.remove("sel"); izq = null;
-          if (++estado.hechos === d.pares.length) comprobar();
-        } else {
-          estado.fallos++; b.classList.add("mal"); setTimeout(() => b.classList.remove("mal"), 500);
+        if (lado === "l" || esIngles(b.dataset.r)) decir(lado === "l" ? b.dataset.l : b.dataset.r, VEL.palabra);
+        if (!sel || sel.lado === lado) {
+          app.querySelectorAll(".par.sel").forEach((x) => x.classList.remove("sel"));
+          b.classList.add("sel"); sel = { lado, b }; return;
         }
-      }));
+        const l = lado === "l" ? b : sel.b, r = lado === "r" ? b : sel.b;
+        sel = null;
+        app.querySelectorAll(".par.sel").forEach((x) => x.classList.remove("sel"));
+        if (d.pares.some((p) => p[0] === l.dataset.l && p[1] === r.dataset.r)) {
+          [l, r].forEach((x) => { x.classList.add("acierto"); setTimeout(() => x.classList.add("hecha"), 350); });
+          decir(esIngles(r.dataset.r) ? `${l.dataset.l}, ${r.dataset.r}` : l.dataset.l, VEL.palabra);
+          try { navigator.vibrate?.(20); } catch {}
+          if (++estado.hechos === d.pares.length) setTimeout(comprobar, 450);
+        } else {
+          estado.fallos++;
+          [l, r].forEach((x) => { x.classList.add("mal"); setTimeout(() => x.classList.remove("mal"), 500); });
+        }
+      };
+      app.querySelectorAll("[data-l]").forEach((b) => (b.onclick = () => tocar(b, "l")));
+      app.querySelectorAll("[data-r]").forEach((b) => (b.onclick = () => tocar(b, "r")));
     }
   }
 
@@ -522,11 +546,14 @@ async function jugarEjercicios({ titulo, ejercicios, leccionId = null, modo = "l
       else if (t === "elegir" || t === "rapido") ingles = d.frase.includes("___") ? d.frase.replace("___", correcta) : (d.frase.startsWith("¿") ? "" : correcta);
       if (t === "rapido" && estado.sel === -1) extra = `<div>⏰ Se acabó el tiempo.</div>`;
       if (t === "comprension") { const tx = document.getElementById("c-texto"); if (tx) tx.hidden = false; if (!examen) extra = `<div class="muted">${d.lineas.map((l) => esc(l.es)).join(" ")}</div>`; }
-    } else if (t === "decir") {
+    } else if (t === "decir" || t === "dibujo") {
       const v = estado.dicho || document.getElementById("resp").value;
-      if (!normalizarVoz(v)) return err("Toca 🎤 y di la frase (o escríbela).");
-      const r = parecido(v, d.respuestas);
-      ok = r.ok; ortografia = r.casi; tuya = v;
+      if (!normalizarVoz(v)) return err(t === "dibujo" ? "Toca 🎤 y di qué es (o escríbelo)." : "Toca 🎤 y di la frase (o escríbela).");
+      const resp = t === "dibujo" ? d.respuestas.flatMap(variantesPalabra) : d.respuestas;
+      const r = parecido(v, resp);
+      // En el dibujo también vale una frase que contenga la palabra ("They are shoes")
+      const dentro = t === "dibujo" && resp.some((x) => ` ${normalizarVoz(v)} `.includes(` ${normalizarVoz(x)} `));
+      ok = r.ok || dentro; ortografia = r.casi && !dentro; tuya = v;
       correcta = ingles = d.mostrar;
     } else if (t === "libre") {
       const v = document.getElementById("resp").value.trim();
@@ -587,10 +614,10 @@ async function jugarEjercicios({ titulo, ejercicios, leccionId = null, modo = "l
     if (ingles) decir(ingles);
     document.getElementById("lec-fb").innerHTML = `
       <div class="fb ${ok ? "fb-ok" : "fb-mal"}">
-        <b>${ok ? (ortografia ? (t === "decir" ? "¡Bien! Casi perfecto." : "¡Bien! Ojo con la ortografía.") : "¡Correcto!") : (t === "libre" ? "Todavía no. Mira la corrección:" : "Casi. La respuesta es:")}</b>
+        <b>${ok ? (ortografia ? (t === "decir" || t === "dibujo" ? "¡Bien! Casi perfecto." : "¡Bien! Ojo con la ortografía.") : "¡Correcto!") : (t === "libre" ? "Todavía no. Mira la corrección:" : "Casi. La respuesta es:")}</b>
         ${extra}
         ${(!ok || ortografia) && t !== "libre" ? `<div class="fb-resp">${esc(correcta)}</div>` : ""}
-        ${t === "decir" && tuya ? `<div class="muted">Dijiste: ${esc(tuya)}</div>` : ""}
+        ${(t === "decir" || t === "dibujo") && tuya ? `<div class="muted">Dijiste: ${esc(tuya)}</div>` : ""}
         ${ingles && t !== "libre" ? `<div class="fb-ingles">${btnVoz(ingles)} <span>${fraseTocable(ingles)}</span></div>
         <div class="muted pista-palabra">👆 Toca una palabra para oírla y ver qué significa</div>` : ""}
         ${d.es && !["escribir", "ordenar", "decir"].includes(t) ? `<div class="muted">🇪🇸 ${esc(d.es)}</div>` : ""}

@@ -148,13 +148,17 @@ function armarBloque(datos, nivel) {
   };
   const usados = new Set();
   const dePata = (lista, pata, tipos) => lista.filter((x) => x.pata === pata && (!tipos || tipos.includes(x.tipo)));
-  const estudio = elegir(dePata(delNivel, "estudio"), 4, usados);
+  // Vocabulario (011): 1 pareja de 7 palabras y 1 dibujo para decir (del nivel o de los anteriores)
+  const vocab = datos.ejercicios.filter((x) => x.episodio <= nivel);
+  const parejas = elegir(vocab.filter((x) => x.tipo === "emparejar" && x.datos?.pares?.length >= 6), 1, usados);
+  const dibujos = elegir(vocab.filter((x) => x.tipo === "dibujo"), 1, usados);
+  const estudio = elegir(dePata(delNivel, "estudio").filter((x) => !(x.tipo === "emparejar" && x.datos?.pares?.length >= 6)), 4 - parejas.length, usados);
   const input = elegir(dePata(delNivel, "input"), 2, usados);
   const decir = elegir(dePata(delNivel, "output", ["decir"]), 1, usados);
   const libre = elegir(dePata(delNivel, "output", ["libre"]), 1, usados);
   const repaso = elegir(anteriores.filter((x) => x.pata !== "fluidez"), nivel > 1 ? 1 : 0, usados);
   const rapido = elegir([...dePata(delNivel, "fluidez"), ...dePata(anteriores, "fluidez")], 3, usados);
-  let bloque = [...estudio, ...input, ...decir, ...libre, ...repaso];
+  let bloque = [...parejas, ...estudio, ...input, ...decir, ...dibujos, ...libre, ...repaso];
   // si a algún tipo le faltan ejercicios, se completa con estudio
   const faltan = 9 - bloque.length;
   if (faltan > 0) bloque.push(...elegir(delNivel.filter((x) => x.pata !== "fluidez"), faltan, usados));
