@@ -122,7 +122,7 @@ function pintarChat() {
       <textarea id="t-in" rows="2" placeholder="${sesionTutor.modo === "traducir" ? "Escribe en español…" : "Write in English…"}"></textarea>
       <button class="btn" id="t-env">Enviar</button>
     </div>
-    <div class="muted pista-palabra">👆 Toca una palabra para oírla · ${sesionTutor.usados}/${sesionTutor.limite} mensajes hoy</div>`);
+    <div class="muted pista-palabra">👆 Toca una palabra para oírla y ver qué significa · ${sesionTutor.usados}/${sesionTutor.limite} mensajes hoy</div>`);
   document.getElementById("t-menu").onclick = (e) => { e.preventDefault(); vistaTutor(); };
   const inp = document.getElementById("t-in");
   document.getElementById("t-env").onclick = () => { const v = inp.value.trim(); if (v) enviarAlTutor(v); };

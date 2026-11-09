@@ -133,6 +133,7 @@ function htmlPanelHoy(d, tarjetasPendientes) {
         <a class="btn alt" href="#/ingles/tutor">💬 Tutor</a>
         <a class="btn alt" href="#/ingles/lecturas">📖 Leer y escuchar</a>
         <a class="btn alt" href="#/ingles/repaso">🃏 Tarjetas (${tarjetasPendientes})</a>
+        <a class="btn alt" href="#/ingles/palabras">📝 Mis palabras</a>
       </div>
     </div>`;
 }
@@ -591,7 +592,7 @@ async function jugarEjercicios({ titulo, ejercicios, leccionId = null, modo = "l
         ${(!ok || ortografia) && t !== "libre" ? `<div class="fb-resp">${esc(correcta)}</div>` : ""}
         ${t === "decir" && tuya ? `<div class="muted">Dijiste: ${esc(tuya)}</div>` : ""}
         ${ingles && t !== "libre" ? `<div class="fb-ingles">${btnVoz(ingles)} <span>${fraseTocable(ingles)}</span></div>
-        <div class="muted pista-palabra">👆 Toca una palabra para oírla sola</div>` : ""}
+        <div class="muted pista-palabra">👆 Toca una palabra para oírla y ver qué significa</div>` : ""}
         ${d.es && !["escribir", "ordenar", "decir"].includes(t) ? `<div class="muted">🇪🇸 ${esc(d.es)}</div>` : ""}
         ${d.explicacion && t !== "libre" ? `<div class="fb-ex">💡 ${esc(d.explicacion)}</div>` : ""}
         ${!ok && cola.includes(actual) ? `<div class="muted">Este ejercicio volverá al final.</div>` : ""}

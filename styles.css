@@ -421,3 +421,21 @@ a.wk-card { display: flex; gap: 16px; align-items: center; }
 .tf-sub { font-size: .75rem; font-weight: 700; opacity: .85; }
 .t-sumo { font-size: .8rem; font-weight: 800; color: var(--ok-ink); background: var(--ok-bg); border-radius: 10px; padding: 4px 8px; justify-self: start; }
 .tarjeta-voz .big { margin: 6px 0 10px; } .tarjeta-voz input { margin-top: 10px; }
+
+/* ---------- burbuja de significado (tocar una palabra) ---------- */
+.burbuja { position: fixed; z-index: 2000; background: var(--card); color: var(--ink); border: 2px solid var(--accent);
+  border-radius: 16px; padding: 10px 12px; box-shadow: 0 10px 30px rgba(31, 26, 77, .25); animation: subir .18s ease-out;
+  --flecha: 50%; }
+.burbuja::after { content: ""; position: absolute; left: var(--flecha); bottom: -8px; width: 14px; height: 14px; margin-left: -7px;
+  background: var(--card); border-right: 2px solid var(--accent); border-bottom: 2px solid var(--accent); transform: rotate(45deg); }
+.burbuja.abajo::after { bottom: auto; top: -8px; transform: rotate(225deg); }
+.burbuja-top { display: flex; align-items: center; gap: 6px; font-size: 1.1rem; }
+.burbuja-top b { flex: 1; }
+.burbuja-sig { font-size: 1.05rem; font-weight: 800; margin-top: 4px; }
+.burbuja-nota { font-size: .85rem; margin-top: 2px; }
+.burbuja-guardar { width: 100%; margin-top: 8px; padding: 8px 10px; font-size: .95rem; }
+.burbuja-guardar:disabled { opacity: .8; }
+.palabra { text-decoration: underline dotted var(--line); text-underline-offset: 5px; }
+.mi-palabra { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; padding: 10px 0; border-bottom: 2px solid var(--line); }
+.mi-palabra:last-child { border-bottom: 0; }
+.mi-palabra-frase { font-size: .85rem; font-style: italic; }

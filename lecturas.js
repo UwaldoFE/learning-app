@@ -358,7 +358,7 @@ async function vistaLectura(id) {
         <div class="row" style="justify-content:flex-start;margin:8px 0">
           <button class="btn alt" id="l-es-todo">🇪🇸 Ver todo en español</button>
         </div>
-        <div class="muted pista-palabra">👆 Toca una palabra para oírla sola · 🇪🇸 para ver la traducción de una línea</div>
+        <div class="muted pista-palabra">👆 Toca una palabra para oírla y ver qué significa · 🇪🇸 para ver la traducción de una línea</div>
         ${L.lineas.map((l, i) => `
           <div class="lect-linea" data-i="${i}">
             <div>${l.quien ? `<b class="quien">${esc(l.quien)}:</b> ` : ""}${fraseTocable(l.en)}</div>

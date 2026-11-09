@@ -305,7 +305,14 @@ async function tarjetasDeHoy(unidadId = null) {
   const vencidas = todas.filter((c) => c.prog && c.prog.proxima_revision <= hoy());
   let nuevas = todas.filter((c) => !c.prog);
   if (!unidadId) nuevas = nuevas.slice(0, NUEVAS_POR_DIA);
-  return [...vencidas, ...nuevas];
+  // Mis palabras (las que guardaste tocando una palabra) que tocan hoy
+  let mias = [];
+  if (!unidadId) {
+    const mp = await db.from("mis_palabras").select("*").lte("proxima_revision", hoy());
+    if (!mp.error) mias = mp.data.map((p) => ({ id: "p-" + p.palabra, miPalabra: p, tema: "📝 Mis palabras",
+      frente: p.palabra, reverso: p.significado, prog: { caja: p.caja, aciertos: p.aciertos, fallos: p.fallos } }));
+  }
+  return [...vencidas, ...mias, ...nuevas];
 }
 
 // 🔊 Pronunciación con la voz del navegador (gratis, sin internet extra)
@@ -365,10 +372,18 @@ document.addEventListener("click", (e) => { // en la página y en el tutor flota
   if (p) {
     p.classList.add("oida"); setTimeout(() => p.classList.remove("oida"), 600);
     hablar(p.dataset.palabra, VEL.palabra);
+    if (typeof mostrarSignificado === "function") mostrarSignificado(p); // burbuja con el significado (palabras.js)
   }
 });
 async function contarPendientes() {
   try { return (await tarjetasDeHoy()).length; } catch { return "?"; }
+}
+
+// Una palabra suelta se acepta con o sin artículo y en singular o plural (shoe / shoes / a shoe / the shoes)
+function variantesPalabra(w) {
+  const base = String(w).toLowerCase().trim();
+  const formas = new Set([base, base + "s", base + "es", base.replace(/es$/, ""), base.replace(/s$/, "")]);
+  return [...formas].filter(Boolean).flatMap((f) => [f, "a " + f, "an " + f, "the " + f]);
 }
 
 // Tarjetas: sale la frase en español y la dices en inglés (o la escribes). Si la dices bien, pasa sola a la siguiente.
@@ -386,7 +401,8 @@ async function vistaRepaso(unidadId = null) {
   let i = 0, bien = 0, mal = 0, xp = 0;
   const inicio = Date.now();
   // Qué se pide: la frase de ejemplo si existe (más natural para decir); si no, la palabra o expresión
-  const meta = (c) => c.ejemplo && c.traduccion
+  const meta = (c) => c.miPalabra ? { es: c.reverso, en: c.frente, respuestas: variantesPalabra(c.frente) }
+    : c.ejemplo && c.traduccion
     ? { es: c.traduccion, en: c.ejemplo, respuestas: [c.ejemplo] }
     : { es: c.reverso, en: c.frente, respuestas: [c.frente.replace(/\s*\/\s*/g, " "), ...c.frente.split("/").map((x) => x.trim())] };
 
@@ -470,7 +486,10 @@ async function vistaRepaso(unidadId = null) {
       fallos: p.fallos + (acerto ? 0 : 1),
       actualizado: new Date().toISOString()
     };
-    const { error } = await db.from("progreso").upsert(fila);
+    const { error } = c.miPalabra
+      ? await db.from("mis_palabras").update({ caja, proxima_revision: fila.proxima_revision, aciertos: fila.aciertos, fallos: fila.fallos })
+          .eq("palabra", c.miPalabra.palabra)
+      : await db.from("progreso").upsert(fila);
     if (error) return pintar(errorBox(error));
     acerto ? bien++ : mal++;
     i++; mostrar();
@@ -492,6 +511,7 @@ function nombrePantalla(ruta) {
   if (ruta === "/nowican") return "Now I Can: examen para subir de nivel (no des respuestas)";
   if (ruta.startsWith("/ingles/repaso")) return "Tarjetas de repaso";
   if (ruta === "/ingles/errores") return "Mis errores";
+  if (ruta === "/ingles/palabras") return "Mis palabras guardadas";
   if (ruta === "/ingles/lecturas") return "Lista de Leer y escuchar";
   if (ruta.startsWith("/ingles/lectura/")) return "Leer y escuchar";
   if (ruta.startsWith("/ingles/leccion/")) return "Lección";
@@ -529,6 +549,7 @@ async function router() {
   const m = ruta.match(/^\/ingles\/repaso\/(\d+)$/);
   if (m) return vistaRepaso(Number(m[1]));
   if (ruta === "/ingles/errores") return vistaLeccion("errores");
+  if (ruta === "/ingles/palabras") return vistaMisPalabras();
   if (ruta === "/ingles/lecturas") return vistaLecturas();
   if (ruta === "/ingles/tutor") return vistaTutor();
   if (ruta === "/ingles/mi-vida") return vistaMiVida();
