@@ -96,7 +96,7 @@ insert into ejercicios (id, leccion_id, orden, tipo, datos, tema_id, pata, reser
  'ep12-paises-nacionalidades', 'estudio', false),
 
 ('ep12-pais-06', 'ep12-paises-nacionalidades', 6, 'dictado',
- $j${"audio":"My friend is Australian.","respuestas":["My friend is Australian.","My friend is Australian"],"mostrar":"My friend is ___.","es":"Mi amigo es australiano.","explicacion":"Australian is the nationality for Australia."}$j$,
+ $j${"audio":"My friend is Australian.","respuestas":["My friend is Australian.","My friend is Australian"],"mostrar":"My friend is Australian.","es":"Mi amigo es australiano.","explicacion":"Australian is the nationality for Australia."}$j$,
  'ep12-paises-nacionalidades', 'estudio', false),
 
 ('ep12-pais-07', 'ep12-paises-nacionalidades', 7, 'elegir',
@@ -183,7 +183,7 @@ insert into ejercicios (id, leccion_id, orden, tipo, datos, tema_id, pata, reser
  'ep12-restaurante-vocabulario', 'estudio', false),
 
 ('ep12-rvoc-06', 'ep12-restaurante-vocabulario', 6, 'dictado',
- $j${"audio":"The main course is grilled chicken.","respuestas":["The main course is grilled chicken.","The main course is grilled chicken"],"mostrar":"The main course is ___.","es":"El plato principal es pollo a la parrilla.","explicacion":"'Main course' is the principal dish of a meal."}$j$,
+ $j${"audio":"The main course is grilled chicken.","respuestas":["The main course is grilled chicken.","The main course is grilled chicken"],"mostrar":"The main course is grilled chicken.","es":"El plato principal es pollo a la parrilla.","explicacion":"'Main course' is the principal dish of a meal."}$j$,
  'ep12-restaurante-vocabulario', 'estudio', false),
 
 ('ep12-rvoc-07', 'ep12-restaurante-vocabulario', 7, 'elegir',
@@ -270,7 +270,7 @@ insert into ejercicios (id, leccion_id, orden, tipo, datos, tema_id, pata, reser
  'ep12-restaurante-pedir', 'estudio', false),
 
 ('ep12-rped-06', 'ep12-restaurante-pedir', 6, 'dictado',
- $j${"audio":"Are you ready to order?","respuestas":["Are you ready to order?","Are you ready to order"],"mostrar":"___ to order?","es":"¿Están listos para ordenar?","explicacion":"The waiter asks this when it's time to take your order."}$j$,
+ $j${"audio":"Are you ready to order?","respuestas":["Are you ready to order?","Are you ready to order"],"mostrar":"Are you ready to order?","es":"¿Están listos para ordenar?","explicacion":"The waiter asks this when it's time to take your order."}$j$,
  'ep12-restaurante-pedir', 'estudio', false),
 
 ('ep12-rped-07', 'ep12-restaurante-pedir', 7, 'elegir',
@@ -357,7 +357,7 @@ insert into ejercicios (id, leccion_id, orden, tipo, datos, tema_id, pata, reser
  'ep12-restaurante-conversacion', 'estudio', false),
 
 ('ep12-rcon-06', 'ep12-restaurante-conversacion', 6, 'dictado',
- $j${"audio":"Everything was wonderful, thank you.","respuestas":["Everything was wonderful, thank you.","Everything was wonderful, thank you","Everything was wonderful thank you"],"mostrar":"Everything was ___, thank you.","es":"Todo estuvo maravilloso, gracias.","explicacion":"'Wonderful' expresses high satisfaction with the meal."}$j$,
+ $j${"audio":"Everything was wonderful, thank you.","respuestas":["Everything was wonderful, thank you.","Everything was wonderful, thank you","Everything was wonderful thank you"],"mostrar":"Everything was wonderful, thank you.","es":"Todo estuvo maravilloso, gracias.","explicacion":"'Wonderful' expresses high satisfaction with the meal."}$j$,
  'ep12-restaurante-conversacion', 'estudio', false),
 
 ('ep12-rcon-07', 'ep12-restaurante-conversacion', 7, 'elegir',
@@ -444,7 +444,7 @@ insert into ejercicios (id, leccion_id, orden, tipo, datos, tema_id, pata, reser
  'ep12-will-vs-going-to', 'estudio', false),
 
 ('ep12-wvg-06', 'ep12-will-vs-going-to', 6, 'dictado',
- $j${"audio":"She is going to have a baby.","respuestas":["She is going to have a baby.","She is going to have a baby","She's going to have a baby."],"mostrar":"She ___ have a baby.","es":"Ella va a tener un bebé.","explicacion":"Use 'going to' for a certain future based on present evidence/knowledge."}$j$,
+ $j${"audio":"She is going to have a baby.","respuestas":["She is going to have a baby.","She is going to have a baby","She's going to have a baby."],"mostrar":"She is going to have a baby.","es":"Ella va a tener un bebé.","explicacion":"Use 'going to' for a certain future based on present evidence/knowledge."}$j$,
  'ep12-will-vs-going-to', 'estudio', false),
 
 ('ep12-wvg-07', 'ep12-will-vs-going-to', 7, 'elegir',
@@ -531,7 +531,7 @@ insert into ejercicios (id, leccion_id, orden, tipo, datos, tema_id, pata, reser
  'ep12-pasado-progresivo', 'estudio', false),
 
 ('ep12-ppro-06', 'ep12-pasado-progresivo', 6, 'dictado',
- $j${"audio":"I was sleeping when the alarm went off.","respuestas":["I was sleeping when the alarm went off.","I was sleeping when the alarm went off"],"mostrar":"I was ___ when the alarm ___.","es":"Yo estaba durmiendo cuando sonó la alarma.","explicacion":"Past progressive for the ongoing action, simple past for the interruption."}$j$,
+ $j${"audio":"I was sleeping when the alarm went off.","respuestas":["I was sleeping when the alarm went off.","I was sleeping when the alarm went off"],"mostrar":"I was sleeping when the alarm went off.","es":"Yo estaba durmiendo cuando sonó la alarma.","explicacion":"Past progressive for the ongoing action, simple past for the interruption."}$j$,
  'ep12-pasado-progresivo', 'estudio', false),
 
 ('ep12-ppro-07', 'ep12-pasado-progresivo', 7, 'elegir',
@@ -618,7 +618,7 @@ insert into ejercicios (id, leccion_id, orden, tipo, datos, tema_id, pata, reser
  'ep12-presente-progresivo-futuro', 'estudio', false),
 
 ('ep12-ppfu-06', 'ep12-presente-progresivo-futuro', 6, 'dictado',
- $j${"audio":"They are getting married next June.","respuestas":["They are getting married next June.","They are getting married next June","They're getting married next June."],"mostrar":"They ___ next June.","es":"Ellos se casan en junio próximo.","explicacion":"Use present progressive for a definite arrangement in the future."}$j$,
+ $j${"audio":"They are getting married next June.","respuestas":["They are getting married next June.","They are getting married next June","They're getting married next June."],"mostrar":"They are getting married next June.","es":"Ellos se casan en junio próximo.","explicacion":"Use present progressive for a definite arrangement in the future."}$j$,
  'ep12-presente-progresivo-futuro', 'estudio', false),
 
 ('ep12-ppfu-07', 'ep12-presente-progresivo-futuro', 7, 'elegir',
@@ -705,7 +705,7 @@ insert into ejercicios (id, leccion_id, orden, tipo, datos, tema_id, pata, reser
  'ep12-repaso-tiempos', 'estudio', false),
 
 ('ep12-rept-06', 'ep12-repaso-tiempos', 6, 'dictado',
- $j${"audio":"We lived in Bogotá for five years.","respuestas":["We lived in Bogotá for five years.","We lived in Bogota for five years.","We lived in Bogotá for five years","We lived in Bogota for five years"],"mostrar":"We ___ in Bogotá for five years.","es":"Vivimos en Bogotá por cinco años.","explicacion":"Simple past for a completed period of time."}$j$,
+ $j${"audio":"We lived in Bogotá for five years.","respuestas":["We lived in Bogotá for five years.","We lived in Bogota for five years.","We lived in Bogotá for five years","We lived in Bogota for five years"],"mostrar":"We lived in Bogotá for five years.","es":"Vivimos en Bogotá por cinco años.","explicacion":"Simple past for a completed period of time."}$j$,
  'ep12-repaso-tiempos', 'estudio', false),
 
 ('ep12-rept-07', 'ep12-repaso-tiempos', 7, 'elegir',

@@ -358,7 +358,8 @@ async function jugarEjercicios({ titulo, ejercicios, leccionId = null, modo = "l
 
   const etiquetas = { elegir: "Elige la correcta", escuchar: "Escucha y elige", ordenar: "Ordena la frase",
     escribir: "Escríbelo en inglés", emparejar: "Une cada pareja", decir: "🗣 Dilo en voz alta",
-    libre: "✍️ Con tus palabras (lo califica Wako)", rapido: "⚡ Ronda rápida", dibujo: "🖼 Mira el dibujo y dilo en inglés" };
+    libre: "✍️ Con tus palabras (lo califica Wako)", rapido: "⚡ Ronda rápida", dibujo: "🖼 Mira el dibujo y dilo en inglés",
+    dictado: "✍️ Escucha y escríbelo" };
   const etiquetaPata = { estudio: "📘 Estudio", input: "📖 Input", output: "🗣 Output", fluidez: "⚡ Fluidez" };
   const opcionesHtml = (d) => `<div class="opciones">${d.opciones.map((o, i) => `<button class="opcion" data-op="${i}">${esc(o)}</button>`).join("")}</div>`;
   const lineasHtml = (d, conEs) => d.lineas.map((l) => `<div class="lect-linea">${fraseTocable(l.en)}${conEs ? `<div class="muted lect-es">${esc(l.es)}</div>` : ""}</div>`).join("");
@@ -373,6 +374,10 @@ async function jugarEjercicios({ titulo, ejercicios, leccionId = null, modo = "l
     } else if (t === "escuchar") {
       cuerpo = `<div class="row" style="justify-content:flex-start"><button class="btn alt" id="b-oir">🔊 Escuchar otra vez</button>
         <button class="btn alt" id="b-lento">🐢 Despacio</button></div>${opcionesHtml(d)}`;
+    } else if (t === "dictado") {
+      cuerpo = `<div class="row" style="justify-content:flex-start"><button class="btn alt" id="b-oir">🔊 Escuchar otra vez</button>
+        <button class="btn alt" id="b-lento">🐢 Despacio</button></div>
+        <input type="text" id="resp" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Escribe lo que oigas…">`;
     } else if (t === "comprension") {
       cuerpo = (d.modo === "escuchar"
         ? `<div class="row" style="justify-content:flex-start"><button class="btn alt" id="b-oir">🔊 Escuchar</button>
@@ -496,6 +501,14 @@ async function jugarEjercicios({ titulo, ejercicios, leccionId = null, modo = "l
       inp.focus();
       inp.oninput = () => err("");
       inp.onkeydown = (e) => { if (e.key === "Enter") go.click(); };
+    } else if (t === "dictado") {
+      const inp = document.getElementById("resp");
+      inp.focus();
+      inp.oninput = () => err("");
+      inp.onkeydown = (e) => { if (e.key === "Enter") go.click(); };
+      document.getElementById("b-oir").onclick = () => decir(d.audio);
+      document.getElementById("b-lento").onclick = () => decir(d.audio, VEL.lenta);
+      setTimeout(() => decir(d.audio), 300);
     } else if (t === "emparejar") {
       // Se puede empezar por cualquier lado: toca una palabra y luego su pareja del otro lado
       let sel = null;
@@ -577,7 +590,7 @@ async function jugarEjercicios({ titulo, ejercicios, leccionId = null, modo = "l
       ok = estado.elegidas.join(" ") === d.frase;
       correcta = ingles = d.frase.replace(/ ([?.!,])/g, "$1");
       tuya = estado.elegidas.join(" ");
-    } else if (t === "escribir") {
+    } else if (t === "escribir" || t === "dictado") {
       const v = normalizar(document.getElementById("resp").value);
       if (!v) return err("Escribe tu respuesta primero.");
       const opciones = d.respuestas.map(normalizar);
