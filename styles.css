@@ -346,6 +346,14 @@ a.wk-card { display: flex; gap: 16px; align-items: center; }
 .wk-g-img { position: relative; height: 112px; display: grid; place-items: end center; }
 .wk-g .wako { cursor: default; }
 .wk-actual { border-color: var(--accent); background: var(--accent-soft); box-shadow: 0 4px 0 var(--accent); }
+/* Colores de Wako (031): giran el matiz de la imagen; el visor y la batería no cambian */
+.wk-tono-rosa .wk-cuerpo img { filter: hue-rotate(113deg) saturate(1.1); }
+.wk-tono-morado .wk-cuerpo img { filter: hue-rotate(53deg) saturate(1.1); }
+.wk-tono-verde .wk-cuerpo img { filter: hue-rotate(-87deg) saturate(1.1); }
+.wk-tono-naranja .wk-cuerpo img { filter: hue-rotate(168deg) saturate(1.2); }
+.tonos { display: flex; gap: 10px; align-items: center; justify-content: center; margin: 14px 0; flex-wrap: wrap; }
+.tono-btn { width: 30px; height: 30px; border-radius: 50%; border: 3px solid transparent; cursor: pointer; padding: 0; }
+.tono-btn.activo { border-color: var(--fg, #222); box-shadow: 0 0 0 2px #fff inset; }
 .wk-bloq .wako img { filter: brightness(0) opacity(.22); }
 .wk-bloq .wk-visor, .wk-bloq .wk-pecho, .wk-bloq .wk-antena { display: none; }
 .wk-bloq .wk-cuerpo { animation: none; }

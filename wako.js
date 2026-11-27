@@ -42,7 +42,16 @@ const WAKO_MENSAJE = {
   apagado: "Wako se apagó por falta de energía. Una lección lo despierta (no pierde su etapa)."
 };
 
-const WK = { cargado: false, sinTabla: false, fila: null, estado: null };
+const WK = { cargado: false, sinTabla: false, fila: null, estado: null, tono: "azul" };
+
+// Colores de Wako (031). El cuerpo base es azul; cada color gira su matiz.
+const TONOS = [
+  { id: "azul", nombre: "Azul (original)", color: "#3a76d2" },
+  { id: "rosa", nombre: "Rosa", color: "#e0609a" },
+  { id: "morado", nombre: "Morado", color: "#8a5cd6" },
+  { id: "verde", nombre: "Verde", color: "#3fbf5a" },
+  { id: "naranja", nombre: "Naranja", color: "#f08a2b" }
+];
 
 const etapaDe = (aprobados) => [...WAKO_ETAPAS].reverse().find((e) => aprobados >= e.desde) || WAKO_ETAPAS[0];
 const siguienteEtapa = (n) => WAKO_ETAPAS.find((e) => e.n === n + 1) || null;
@@ -78,6 +87,8 @@ async function wakoCargar(forzar = false) {
   ]);
   WK.sinTabla = !!(fw.error && faltaSQL(fw.error));
   WK.fila = fw.error ? null : fw.data;
+  const perfilW = await miPerfil().catch(() => null);
+  WK.tono = perfilW?.tono_wako || "azul";
   if (WK.fila) EPISODIO_EVALUACION = Math.min(WK.fila.episodios_aprobados + 1, WAKO_EPISODIOS);
 
   // Energía: rayas de hoy (bloques de Mi camino + práctica libre) y reserva; si falta la tabla, se usa el XP
@@ -187,7 +198,7 @@ function htmlWako(est, { alto = 220, etapa = null, animo = null, id = "" } = {})
   const n = etapa || est.etapa.n, im = WAKO_IMG[n], a = animo || est.animo, k = ++wakoContador;
   const pct = (x) => (x * 100).toFixed(2) + "%";
   return `
-    <div class="wako wk-${a}" ${id ? `id="${id}"` : ""} data-etapa="${n}" style="height:${alto}px;width:${Math.round(alto * im.r)}px">
+    <div class="wako wk-${a} wk-tono-${WK.tono || "azul"}" ${id ? `id="${id}"` : ""} data-etapa="${n}" style="height:${alto}px;width:${Math.round(alto * im.r)}px">
       <div class="wk-cuerpo">
         <img src="wako/etapa-${String(n).padStart(2, "0")}.webp" alt="Wako, etapa ${n}" draggable="false">
         <div class="wk-antena" style="left:${pct(im.a[0])};top:${pct(im.a[1])};width:${pct(im.a[2])}"></div>
@@ -305,6 +316,10 @@ async function vistaWako() {
       <div style="display:flex;justify-content:center">${htmlBateria(est)}</div>
       <p class="muted" style="text-align:center">${mensajeWako(est)}</p>
       <div class="row"><a class="btn" href="#/camino">▶ Cargar a Wako: Mi camino (10 min)</a><a class="btn alt" href="#/temas">🚦 Mis temas</a></div>
+      <div class="tonos">
+        <span class="muted">Color de mi Wako:</span>
+        ${TONOS.map((t) => `<button class="tono-btn ${WK.tono === t.id ? "activo" : ""}" data-tono="${t.id}" style="background:${t.color}" title="${t.nombre}" aria-label="${t.nombre}"></button>`).join("")}
+      </div>
       ${!est.certificado ? `<a class="aviso-ubicacion" href="#/ubicacion">🎯 Wako aún no sabe tu nivel real. <b>Haz el examen de ubicación</b> →</a>` : ""}
       ${htmlBarraB2(est)}
     </div>
@@ -338,6 +353,12 @@ async function vistaWako() {
   document.getElementById("wk-meta").onchange = async (e) => {
     try { await wakoGuardar({ meta_rayas: Number(e.target.value) }); vistaWako(); } catch (er) { alert("No se pudo guardar la meta."); }
   };
+  document.querySelectorAll("[data-tono]").forEach((b) => (b.onclick = async () => {
+    const { error } = await db.rpc("elegir_tono_wako", { p_tono: b.dataset.tono });
+    if (error) return alert("No se pudo cambiar el color: " + error.message);
+    WK.tono = b.dataset.tono;
+    vistaWako();
+  }));
 
 }
 
