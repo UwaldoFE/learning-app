@@ -33,7 +33,9 @@ const UNIDADES = {
   11: [{ n: 22, nombre: "The Town Map", temas: ["ep11-going-to", "ep11-going-to-neg", "ep11-lugares-ciudad", "ep11-transporte"] },
        { n: 23, nombre: "At the Antique Shop", temas: ["ep11-partes-casa", "ep11-muebles", "ep11-quehaceres", "ep11-there-is-are"] }],
   12: [{ n: 24, nombre: "At the Restaurant", temas: ["ep12-paises-nacionalidades", "ep12-restaurante-vocabulario", "ep12-restaurante-pedir", "ep12-restaurante-conversacion"] },
-       { n: 25, nombre: "Tenses Review", temas: ["ep12-will-vs-going-to", "ep12-pasado-progresivo", "ep12-presente-progresivo-futuro", "ep12-repaso-tiempos"] }]
+       { n: 25, nombre: "Tenses Review", temas: ["ep12-will-vs-going-to", "ep12-pasado-progresivo", "ep12-presente-progresivo-futuro", "ep12-repaso-tiempos"] }],
+  13: [{ n: 26, nombre: "At the Doctor", temas: ["ep13-subjuntivo", "ep13-expresiones-it", "ep13-cuerpo-organos", "ep13-sintomas-farmacia"] },
+       { n: 27, nombre: "At the Psychiatrist", temas: ["ep13-emociones", "ep13-have-modal", "ep13-casa-vocabulario", "ep13-satisfaccion"] }]
 };
 
 // Cuánto hay que demostrar en cada pata para que un tema quede dominado
