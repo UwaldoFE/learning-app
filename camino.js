@@ -24,7 +24,7 @@ const UNIDADES = {
   7: [{ n: 13, nombre: "A Bar", temas: ["ep7-preposiciones", "ep7-posesivo-s", "ep7-bebidas"] },
       { n: 14, nombre: "An Explanation", temas: ["ep7-pronombres-posesivos", "ep7-adverbios"] },
       { n: 15, nombre: "Review", temas: ["ep7-tag-questions", "ep7-preguntas-negativas"] }],
-  8: [{ n: 16, nombre: "Renting a Car", temas: ["ep8-will", "ep8-going-to", "ep8-shall", "ep8-carro"] },
+  8: [{ n: 16, nombre: "Renting a Car", temas: ["ep8-will", "ep8-going-to", "ep8-shall", "ep8-carro", "ep8-reflexivos", "ep8-invitaciones"] },
       { n: 17, nombre: "Memories", temas: ["ep8-presente-perfecto", "ep8-just-already-yet", "ep8-ropa"] }]
 };
 
