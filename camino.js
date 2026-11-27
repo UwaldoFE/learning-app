@@ -43,7 +43,9 @@ const UNIDADES = {
   16: [{ n: 33, nombre: "Expressing Sympathy", temas: ["ep16-expresiones-simpatia", "ep16-conjunciones-subordinantes", "ep16-linking-words", "ep16-animales-descripcion"] },
        { n: 34, nombre: "A Conversation", temas: ["ep16-pasiva-formacion", "ep16-pasiva-usos", "ep16-pasiva-infinitivos", "ep16-animales-preguntas"] }],
   17: [{ n: 35, nombre: "Gerunds & Infinitives", temas: ["ep17-gerundios-verbos", "ep17-infinitivos-verbos", "ep17-go-have-ing", "ep17-stop-remember"] },
-       { n: 36, nombre: "Literature & Movies", temas: ["ep17-cine-literatura", "ep17-gustos-preferencias", "ep17-percepcion", "ep17-objetos-directos-indirectos"] }]
+       { n: 36, nombre: "Literature & Movies", temas: ["ep17-cine-literatura", "ep17-gustos-preferencias", "ep17-percepcion", "ep17-objetos-directos-indirectos"] }],
+  18: [{ n: 37, nombre: "Leisure: Museums & The Theater", temas: ["ep18-reported-speech", "ep18-say-tell", "ep18-homofonos", "ep18-arte-teatro"] },
+       { n: 38, nombre: "Congratulations", temas: ["ep18-condicional-cero", "ep18-primer-condicional", "ep18-felicitaciones", "ep18-preguntas-ordenes-indirecto"] }]
 };
 
 // Cuánto hay que demostrar en cada pata para que un tema quede dominado
