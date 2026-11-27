@@ -56,10 +56,10 @@ const traducirError = (m = "") =>
   : /at least 6/i.test(m) ? "La contraseña debe tener al menos 6 caracteres."
   : m;
 
-// modo: "entrar" | "crear" | "olvide"
-function vistaLogin(msg = "", modo = "entrar") {
+// modo: "entrar" | "crear" | "olvide" | "magiclink"
+function vistaLogin(msg = "", modo = "magiclink") {
   btnSalir.hidden = true;
-  const titulos = { entrar: "Entrar", crear: "Crear cuenta", olvide: "Recuperar contraseña" };
+  const titulos = { entrar: "Entrar", crear: "Crear cuenta", olvide: "Recuperar contraseña", magiclink: "Entrar" };
   pintar(`
     <div class="box card">
       <h1>${titulos[modo]}</h1>
@@ -67,35 +67,44 @@ function vistaLogin(msg = "", modo = "entrar") {
         ${modo === "crear" ? `<input type="text" id="nombre" required placeholder="Tu nombre" autocomplete="name">` : ""}
         <input type="email" id="email" required placeholder="tu@correo.com" autocomplete="email"
           autocapitalize="off" autocorrect="off" spellcheck="false" inputmode="email">
-        ${modo !== "olvide" ? campoClave("clave", "Contraseña", modo === "crear" ? "new-password" : "current-password") : ""}
-        <button class="btn" id="btn-enviar">${modo === "olvide" ? "Enviarme el enlace" : titulos[modo]}</button>
+        ${modo === "entrar" || modo === "crear" ? campoClave("clave", "Contraseña", modo === "crear" ? "new-password" : "current-password") : ""}
+        <button class="btn" id="btn-enviar">${
+          modo === "magiclink" ? "📩 Enviarme enlace para entrar" :
+          modo === "olvide" ? "Enviarme el enlace" : titulos[modo]
+        }</button>
       </form>
+      ${modo === "magiclink" ? `<p class="muted" style="margin-top:0.5rem">Solo escribe tu correo. Te llega un link y entras sin contraseña.</p>` : ""}
       <p id="login-msg" class="muted">${esc(msg)}</p>
-      <div class="row" style="justify-content:flex-start">
-        ${modo !== "entrar" ? `<button class="link" data-modo="entrar">Ya tengo cuenta</button>` : ""}
+      <div class="row" style="justify-content:flex-start;flex-wrap:wrap;gap:0.5rem">
+        ${modo !== "magiclink" ? `<button class="link" data-modo="magiclink">Entrar con enlace</button>` : ""}
+        ${modo !== "entrar" ? `<button class="link" data-modo="entrar">Entrar con contraseña</button>` : ""}
         ${modo !== "crear" ? `<button class="link" data-modo="crear">Crear cuenta</button>` : ""}
-        ${modo !== "olvide" ? `<button class="link" data-modo="olvide">Olvidé mi contraseña</button>` : ""}
       </div>
     </div>`);
   app.querySelectorAll("[data-modo]").forEach((b) => (b.onclick = () => vistaLogin("", b.dataset.modo)));
 
   document.getElementById("f-login").onsubmit = async (ev) => {
     ev.preventDefault();
-    // En el celular el teclado a veces pone mayúscula al inicio o un espacio al final: se limpia
     const email = document.getElementById("email").value.trim().toLowerCase();
     const clave = document.getElementById("clave")?.value;
     const btn = document.getElementById("btn-enviar");
     const out = document.getElementById("login-msg");
     btn.disabled = true; out.textContent = "Un momento…";
     let error;
-    if (modo === "entrar") {
+    if (modo === "magiclink") {
+      ({ error } = await db.auth.signInWithOtp({ email, options: { emailRedirectTo: URL_APP } }));
+      if (!error) {
+        out.innerHTML = "✅ <b>¡Listo!</b> Revisa tu correo y toca el enlace para entrar. Si no lo ves, busca en spam.";
+        btn.disabled = true;
+        return;
+      }
+    } else if (modo === "entrar") {
       ({ error } = await db.auth.signInWithPassword({ email, password: clave }));
-      // Si falló y la clave tiene espacios al inicio o al final (típico del teclado del celular), se intenta sin ellos
       if (error && clave !== clave.trim()) ({ error } = await db.auth.signInWithPassword({ email, password: clave.trim() }));
       if (!error) return router();
       if (/Invalid login credentials/i.test(error.message)) {
         btn.disabled = false;
-        out.textContent = "Correo o contraseña incorrectos. Toca el 👁 para revisar la contraseña: en el celular a veces se pone una mayúscula al inicio sin que te des cuenta.";
+        out.textContent = "Correo o contraseña incorrectos. Prueba con \"Entrar con enlace\" — es más fácil.";
         return;
       }
     } else if (modo === "crear") {
