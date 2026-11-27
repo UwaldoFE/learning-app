@@ -459,3 +459,11 @@ a.wk-card { display: flex; gap: 16px; align-items: center; }
 .dibujo-caja { display: flex; justify-content: center; margin: 8px 0 4px; }
 .dibujo.grande { width: min(210px, 56vw); height: auto; animation: subir .25s ease-out; }
 .pista-dibujo { text-align: center; margin-top: 4px; }
+
+/* Avance y reportes (029) */
+.barra-av { height: 10px; background: #ece8ff; border-radius: 99px; overflow: hidden; margin: 8px 0; }
+.barra-av span { display: block; height: 100%; background: linear-gradient(90deg, #6c4cf5, #ec4899); border-radius: 99px; }
+.tabla-av-wrap { overflow-x: auto; margin-top: 12px; }
+.tabla-av { width: 100%; border-collapse: collapse; font-size: 14px; background: #fff; border-radius: 12px; overflow: hidden; }
+.tabla-av th, .tabla-av td { padding: 10px; text-align: left; border-bottom: 1px solid #eee; white-space: nowrap; }
+.tabla-av th { background: #f3f0ff; font-weight: 700; }
