@@ -49,7 +49,7 @@ const siguienteEtapa = (n) => WAKO_ETAPAS.find((e) => e.n === n + 1) || null;
 // Batería: rayas por día (1 bloque = 1 raya; 10 min de práctica libre = ½ raya) y reserva (hasta 2 días)
 function calcularBateria(filas, meta) {
   const rayasDe = {};
-  for (const r of filas) rayasDe[r.fecha] = (r.bloques || 0) + Math.floor((r.minutos_libre || 0) / 10) / 2;
+  for (const r of filas) rayasDe[r.fecha] = (rayasDe[r.fecha] || 0) + (r.bloques || 0) + Math.floor((r.minutos_libre || 0) / 10) / 2;
   let reserva = 0;
   const cubierto = {};
   for (let i = 30; i >= 1; i--) {
@@ -83,9 +83,17 @@ async function wakoCargar(forzar = false) {
   // Energía: rayas de hoy (bloques de Mi camino + práctica libre) y reserva; si falta la tabla, se usa el XP
   const meta = WK.fila?.meta_rayas || 4;
   const fen = await db.from("mi_energia").select("fecha, bloques, minutos_libre").gte("fecha", desde);
+  // Regalos de energía (030): recibir suma rayas a Wako, regalar las resta
+  const yoUser = await usuarioActual();
+  const fre = yoUser ? await db.from("regalos").select("de, para, rayas, fecha").gte("fecha", desde) : { data: [] };
+  const extras = (fre.data || []).map((g) => ({
+    fecha: g.fecha,
+    bloques: g.para === yoUser?.id ? Number(g.rayas) : -Number(g.rayas),
+    minutos_libre: 0
+  }));
   let energia, animo, xpHoy = 0, dias = 0, rayas = null, reserva = 0, usandoReserva = false;
   if (!fen.error) {
-    const b = calcularBateria(fen.data || [], meta);
+    const b = calcularBateria([...(fen.data || []), ...extras], meta);
     rayas = b.hoy; reserva = b.reserva; dias = b.diasSin;
     if (rayas >= meta) { energia = 100; animo = "emocionado"; }
     else if (rayas > 0) { energia = Math.round((rayas / meta) * 100); animo = "feliz"; }

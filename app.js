@@ -165,6 +165,7 @@ async function vistaAdmin(yo) {
     <a href="#/" class="link">← Inicio</a>
     <h1>👑 Administrar accesos</h1>
     <p class="muted">${data.length} usuario(s) · ${pendientes} pendiente(s) de aprobar</p>
+    <p><a class="link" href="#/admin/reportes-chat">🚩 Reportes del chat</a></p>
     ${data.map((p) => `
       <div class="card" style="margin:10px 0">
         <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center">
@@ -173,7 +174,11 @@ async function vistaAdmin(yo) {
             <span class="pill">${p.rol === "admin" ? "Administrador" : "Estudiante"}</span>
             <span class="pill" style="color:${p.activo ? "var(--accent)" : "var(--bad)"}">${p.activo ? "Con acceso" : "Pendiente"}</span>
             <div class="muted">${esc(p.email)}</div>
-            <a class="link" href="#/admin/avance/${p.id}">📊 Ver avance</a>
+            ${p.nino ? `<span class="pill">Niña/o</span>` : ""}
+            <div>
+              <a class="link" href="#/admin/avance/${p.id}">📊 Ver avance</a> ·
+              <a class="link" href="#/admin/supervisar/${p.id}">💬 Chat</a>
+            </div>
           </div>
           ${p.id === yo.id ? `<span class="muted">(tú)</span>` : `
           <div class="row" style="margin:0">
@@ -181,11 +186,16 @@ async function vistaAdmin(yo) {
               ${p.activo ? "Quitar acceso" : "Dar acceso"}</button>
             <button class="btn alt" data-acc="rol" data-id="${p.id}" data-val="${p.rol === "admin" ? "estudiante" : "admin"}">
               ${p.rol === "admin" ? "Quitar admin" : "Hacer admin"}</button>
+            <button class="btn alt" data-acc="nino" data-id="${p.id}" data-val="${!p.nino}">
+              ${p.nino ? "Quitar «menor»" : "Marcar como menor"}</button>
           </div>`}
         </div>
       </div>`).join("")}`);
   app.querySelectorAll("[data-acc]").forEach((b) => (b.onclick = async () => {
-    const cambio = b.dataset.acc === "activo" ? { activo: b.dataset.val === "true" } : { rol: b.dataset.val };
+    const val = b.dataset.val === "true";
+    const cambio = b.dataset.acc === "activo" ? { activo: val }
+      : b.dataset.acc === "nino" ? { nino: val }
+      : { rol: b.dataset.val };
     b.disabled = true;
     const { error } = await db.from("perfiles").update(cambio).eq("id", b.dataset.id);
     if (error) return alert("No se pudo guardar: " + error.message);
@@ -257,7 +267,7 @@ async function vistaInicio(user, perfil) {
   pintar(`
     <h1>Hola${perfil.nombre ? " " + esc(perfil.nombre) : ""} 👋</h1>
     <p class="muted">${esc(user.email)} ·
-      <a href="#/clave">Mi contraseña</a> · <a href="#/avance">📊 Mi avance</a>
+      <a href="#/clave">Mi contraseña</a> · <a href="#/avance">📊 Mi avance</a> · <a href="#/chat">💬 Chat</a>
       ${perfil.rol === "admin" ? ` · <a href="#/admin">👑 Administrar accesos</a>` : ""}</p>
     <div id="wk-lugar"></div>
     <div class="grid">
@@ -611,6 +621,17 @@ async function router() {
   const ma = ruta.match(/^\/admin\/avance\/([0-9a-f-]{36})$/);
   if (ma && perfil.rol === "admin") return vistaAvance(perfil, ma[1]);
   if (ruta === "/avance") return vistaAvance(perfil);
+  // ---------- chat (030) ----------
+  if (ruta === "/chat") return vistaChatLista();
+  const mc = ruta.match(/^\/chat\/([0-9a-f-]{36})$/);
+  if (mc) return vistaConversacion(perfil, mc[1]);
+  if (perfil.rol === "admin") {
+    if (ruta === "/admin/reportes-chat") return vistaReportesChat();
+    const ms = ruta.match(/^\/admin\/supervisar\/([0-9a-f-]{36})$/);
+    if (ms) return vistaSupervisar(ms[1]);
+    const mm = ruta.match(/^\/admin\/chat\/([0-9a-f-]{36})\/([0-9a-f-]{36})$/);
+    if (mm) return vistaConversacion(perfil, mm[2], { uid: mm[1] });
+  }
   if (ruta === "/wako") return vistaWako();
   if (ruta === "/camino") return vistaCamino();
   if (ruta === "/temas") return vistaTemas();
