@@ -38,8 +38,12 @@ const UNIDADES = {
        { n: 27, nombre: "At the Psychiatrist", temas: ["ep13-emociones", "ep13-have-modal", "ep13-casa-vocabulario", "ep13-satisfaccion"] }],
   14: [{ n: 28, nombre: "At the Supermarket", temas: ["ep14-cuantificadores", "ep14-envases-medidas", "ep14-alimentos", "ep14-frutas-verduras"] },
        { n: 29, nombre: "A Get-Together", temas: ["ep14-lend-borrow", "ep14-pronombres-reflexivos", "ep14-permisos-postres", "ep14-preposiciones"] }],
-  15: [{ n: 31, nombre: "An Advertising Campaign", temas: ["ep15-phrasal-verbs", "ep15-indefinidos", "ep15-reciprocos", "ep15-idioms"] },
-       { n: 32, nombre: "A Television Talk Show", temas: ["ep15-pronombres-interrogativos", "ep15-opiniones-desacuerdo"] }]
+  15: [{ n: 31, nombre: "An Advertising Campaign", temas: ["ep15-phrasal-verbs", "ep15-indefinidos", "ep15-reciprocos", "ep15-idioms", "ep15-homofonos", "ep15-significado-homofonos"] },
+       { n: 32, nombre: "A Television Talk Show", temas: ["ep15-pronombres-interrogativos", "ep15-opiniones-desacuerdo"] }],
+  16: [{ n: 33, nombre: "Expressing Sympathy", temas: ["ep16-expresiones-simpatia", "ep16-conjunciones-subordinantes", "ep16-linking-words", "ep16-animales-descripcion"] },
+       { n: 34, nombre: "A Conversation", temas: ["ep16-pasiva-formacion", "ep16-pasiva-usos", "ep16-pasiva-infinitivos", "ep16-animales-preguntas"] }],
+  17: [{ n: 35, nombre: "Gerunds & Infinitives", temas: ["ep17-gerundios-verbos", "ep17-infinitivos-verbos", "ep17-go-have-ing", "ep17-stop-remember"] },
+       { n: 36, nombre: "Literature & Movies", temas: ["ep17-cine-literatura", "ep17-gustos-preferencias", "ep17-percepcion", "ep17-objetos-directos-indirectos"] }]
 };
 
 // Cuánto hay que demostrar en cada pata para que un tema quede dominado
