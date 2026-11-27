@@ -25,7 +25,7 @@ const UNIDADES = {
       { n: 14, nombre: "An Explanation", temas: ["ep7-pronombres-posesivos", "ep7-adverbios"] },
       { n: 15, nombre: "Review", temas: ["ep7-tag-questions", "ep7-preguntas-negativas"] }],
   8: [{ n: 16, nombre: "Renting a Car", temas: ["ep8-will", "ep8-going-to", "ep8-shall", "ep8-carro", "ep8-reflexivos", "ep8-invitaciones"] },
-      { n: 17, nombre: "Memories", temas: ["ep8-presente-perfecto", "ep8-just-already-yet", "ep8-ropa"] }]
+      { n: 17, nombre: "Memories", temas: ["ep8-presente-perfecto", "ep8-just-already-yet", "ep8-ropa", "ep8-ing-adjetivos", "ep8-ing-ed", "ep8-pasado-progresivo", "ep8-futuro-progresivo", "ep8-actividades", "ep8-joyeria-telas"] }]
 };
 
 // Cuánto hay que demostrar en cada pata para que un tema quede dominado
