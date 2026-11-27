@@ -25,7 +25,15 @@ const UNIDADES = {
       { n: 14, nombre: "An Explanation", temas: ["ep7-pronombres-posesivos", "ep7-adverbios"] },
       { n: 15, nombre: "Review", temas: ["ep7-tag-questions", "ep7-preguntas-negativas"] }],
   8: [{ n: 16, nombre: "Renting a Car", temas: ["ep8-will", "ep8-going-to", "ep8-shall", "ep8-carro", "ep8-reflexivos", "ep8-invitaciones"] },
-      { n: 17, nombre: "Memories", temas: ["ep8-presente-perfecto", "ep8-just-already-yet", "ep8-ropa", "ep8-ing-adjetivos", "ep8-ing-ed", "ep8-pasado-progresivo", "ep8-futuro-progresivo", "ep8-actividades", "ep8-joyeria-telas"] }]
+      { n: 17, nombre: "Memories", temas: ["ep8-presente-perfecto", "ep8-just-already-yet", "ep8-ropa", "ep8-ing-adjetivos", "ep8-ing-ed", "ep8-pasado-progresivo", "ep8-futuro-progresivo", "ep8-actividades", "ep8-joyeria-telas"] }],
+  9: [{ n: 18, nombre: "A Family Photograph", temas: ["ep9-familia", "ep9-perfecto-experiencias", "ep9-perfecto-for-since", "ep9-familia-descripcion"] },
+      { n: 19, nombre: "The Weather", temas: ["ep9-clima-vocabulario", "ep9-naturaleza", "ep9-clima-conversacion", "ep9-estaciones"] }],
+  10: [{ n: 20, nombre: "Adjectives & Comparisons", temas: ["ep10-comparativos", "ep10-superlativos", "ep10-as-as", "ep10-edificios"] },
+       { n: 21, nombre: "Asking for Directions", temas: ["ep10-computadores", "ep10-internet", "ep10-direcciones", "ep10-preposiciones-lugar"] }],
+  11: [{ n: 22, nombre: "The Town Map", temas: ["ep11-going-to", "ep11-going-to-neg", "ep11-lugares-ciudad", "ep11-transporte"] },
+       { n: 23, nombre: "At the Antique Shop", temas: ["ep11-partes-casa", "ep11-muebles", "ep11-quehaceres", "ep11-there-is-are"] }],
+  12: [{ n: 24, nombre: "At the Restaurant", temas: ["ep12-paises-nacionalidades", "ep12-restaurante-vocabulario", "ep12-restaurante-pedir", "ep12-restaurante-conversacion"] },
+       { n: 25, nombre: "Tenses Review", temas: ["ep12-will-vs-going-to", "ep12-pasado-progresivo", "ep12-presente-progresivo-futuro", "ep12-repaso-tiempos"] }]
 };
 
 // Cuánto hay que demostrar en cada pata para que un tema quede dominado
