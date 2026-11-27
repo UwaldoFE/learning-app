@@ -57,7 +57,7 @@ const traducirError = (m = "") =>
   : m;
 
 // modo: "entrar" | "crear" | "olvide" | "magiclink"
-function vistaLogin(msg = "", modo = "magiclink") {
+function vistaLogin(msg = "", modo = "entrar") {
   btnSalir.hidden = true;
   const titulos = { entrar: "Entrar", crear: "Crear cuenta", olvide: "Recuperar contraseña", magiclink: "Entrar" };
   pintar(`
@@ -571,6 +571,24 @@ async function router() {
 
 btnSalir.onclick = async () => { await db.auth.signOut(); location.hash = "/"; vistaLogin("Sesión cerrada."); };
 window.addEventListener("hashchange", () => { modoRecuperacion = false; router(); });
+// Supabase a veces pone los tokens de recuperación como ?query en vez de #hash.
+// Los movemos al hash para que el SDK los detecte correctamente.
+(function arreglarTokensEnURL() {
+  const params = new URLSearchParams(location.search);
+  const tipo = params.get("type") || params.get("token_type");
+  const token = params.get("access_token") || params.get("token");
+  if (tipo && token) {
+    // Mover los parámetros al hash fragment donde Supabase los espera
+    const hash = location.search.replace("?", "#");
+    history.replaceState(null, "", location.pathname + hash);
+  }
+  // También revisar si el hash ya trae type=recovery
+  if (location.hash.includes("type=recovery") || location.hash.includes("type=magiclink")) {
+    // Forzar que Supabase procese el hash
+    // No hacer nada extra: el SDK lo lee solo al hacer getSession()
+  }
+})();
+
 db.auth.onAuthStateChange((evento) => {
   if (evento === "PASSWORD_RECOVERY") { modoRecuperacion = true; router(); }
   else if (evento === "SIGNED_IN") router();
