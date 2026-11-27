@@ -164,7 +164,7 @@ async function vistaAdmin(yo) {
   pintar(`
     <a href="#/" class="link">← Inicio</a>
     <h1>👑 Administrar accesos</h1>
-    <p class="muted">${data.length} usuario(s) · ${pendientes} pendiente(s) de aprobar · <a href="#/admin/reportes">📊 Ver reportes de todos</a></p>
+    <p class="muted">${data.length} usuario(s) · ${pendientes} pendiente(s) de aprobar</p>
     ${data.map((p) => `
       <div class="card" style="margin:10px 0">
         <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center">
@@ -173,6 +173,7 @@ async function vistaAdmin(yo) {
             <span class="pill">${p.rol === "admin" ? "Administrador" : "Estudiante"}</span>
             <span class="pill" style="color:${p.activo ? "var(--accent)" : "var(--bad)"}">${p.activo ? "Con acceso" : "Pendiente"}</span>
             <div class="muted">${esc(p.email)}</div>
+            <a class="link" href="#/admin/avance/${p.id}">📊 Ver avance</a>
           </div>
           ${p.id === yo.id ? `<span class="muted">(tú)</span>` : `
           <div class="row" style="margin:0">
@@ -200,15 +201,22 @@ function barraAv(valor, total) {
   return `<div class="barra-av"><span style="width:${pctAv(valor, total)}%"></span></div>`;
 }
 
-async function vistaAvance(perfil) {
-  pintar(`<p class="muted">Cargando tu avance…</p>`);
-  const { data, error } = await db.rpc("mi_avance");
-  if (error) return pintar(`<a href="#/" class="link">← Inicio</a>` + errorBox(error));
+// Sin uid: avance propio. Con uid (solo admin): avance de ese usuario.
+async function vistaAvance(yo, uid = null) {
+  const volver = uid ? `<a href="#/admin" class="link">← Accesos</a>` : `<a href="#/" class="link">← Inicio</a>`;
+  pintar(`<p class="muted">Cargando avance…</p>`);
+  const { data, error } = await db.rpc("mi_avance", uid ? { uid } : {});
+  if (error) return pintar(volver + errorBox(error));
+  let nombre = yo.nombre || yo.email || "";
+  if (uid) {
+    const { data: p } = await db.from("perfiles").select("nombre,email").eq("id", uid).single();
+    nombre = p ? (p.nombre || p.email) : "";
+  }
   const a = data || {};
   pintar(`
-    <a href="#/" class="link">← Inicio</a>
-    <h1>📊 Mi avance</h1>
-    <p class="muted">${esc(perfil.nombre || perfil.email || "")}</p>
+    ${volver}
+    <h1>📊 ${uid ? "Avance de " + esc(nombre) : "Mi avance"}</h1>
+    ${uid ? "" : `<p class="muted">${esc(nombre)}</p>`}
     <div class="grid">
       <div class="card">
         <h2>Temas dominados</h2>
@@ -242,36 +250,6 @@ async function vistaAvance(perfil) {
         <p class="muted">en ${a.dias_estudio ?? 0} día(s) de estudio</p>
       </div>
     </div>`);
-}
-
-async function vistaReportes(yo) {
-  pintar(`<p class="muted">Cargando reportes…</p>`);
-  const { data, error } = await db.rpc("reporte_usuarios");
-  if (error) return pintar(`<a href="#/admin" class="link">← Accesos</a>` + errorBox(error));
-  const filas = [...(data || [])].sort((x, y) => (y.avance?.temas_verdes ?? 0) - (x.avance?.temas_verdes ?? 0));
-  pintar(`
-    <a href="#/admin" class="link">← Accesos</a>
-    <h1>📊 Reportes de todos</h1>
-    <p class="muted">${filas.length} usuario(s). Solo lectura; ordenado por temas dominados.</p>
-    <div class="tabla-av-wrap"><table class="tabla-av">
-      <thead><tr>
-        <th>Nombre</th><th>Acceso</th><th>Temas 🟢</th><th>Lecciones ✓</th>
-        <th>Días 7</th><th>Último</th><th>Wako</th><th>Exámenes</th>
-      </tr></thead>
-      <tbody>${filas.map((u) => {
-        const v = u.avance || {};
-        return `<tr>
-          <td><b>${esc(u.nombre || "(sin nombre)")}</b><div class="muted">${esc(u.email)}</div></td>
-          <td>${u.activo ? "Con acceso" : "Pendiente"}${u.rol === "admin" ? " · admin" : ""}</td>
-          <td>${v.temas_verdes ?? 0} / ${v.temas_total ?? 0}</td>
-          <td>${v.lecciones_aprobadas ?? 0}</td>
-          <td>${v.dias_7 ?? 0} / 7</td>
-          <td>${fechaAv(v.ultimo_estudio)}</td>
-          <td>${v.etapa_wako ?? 1}/10</td>
-          <td>${v.examenes_aprobados ?? 0}</td>
-        </tr>`;
-      }).join("")}</tbody>
-    </table></div>`);
 }
 
 // ---------- vistas ----------
@@ -630,7 +608,8 @@ async function router() {
   ponerContexto(nombrePantalla(ruta));
   marcarNavegacion(ruta, true);
   if (ruta === "/admin" && perfil.rol === "admin") return vistaAdmin(perfil);
-  if (ruta === "/admin/reportes" && perfil.rol === "admin") return vistaReportes(perfil);
+  const ma = ruta.match(/^\/admin\/avance\/([0-9a-f-]{36})$/);
+  if (ma && perfil.rol === "admin") return vistaAvance(perfil, ma[1]);
   if (ruta === "/avance") return vistaAvance(perfil);
   if (ruta === "/wako") return vistaWako();
   if (ruta === "/camino") return vistaCamino();
